@@ -14,24 +14,24 @@ const imagesDir = new URL('../public/images', import.meta.url).pathname;
 const audioDir = new URL('../public/audio', import.meta.url).pathname;
 const wordsDir = join(audioDir, 'words');
 
-// Add congratulatory messages
+// Add congratulatory messages - modified to be more declarative for children with PDA
 const congratulatoryMessages = [
-  "Well done! That's correct!",
-  "Great job! You got it right!",
-  "Excellent! You're so smart!",
-  "Amazing! You're doing great!",
-  "Fantastic! Keep it up!",
-  "That's right! You're a superstar!"
+  "That's the right letter.",
+  "The letter matches the picture.",
+  "That letter and picture go together.",
+  "The answer is correct.",
+  "That's how the word starts.",
+  "The letter and sound match."
 ];
 
-// Add supportive messages
+// Add supportive messages - modified to be more declarative and less demanding for PDA
 const supportiveMessages = [
-  "Try again, you can do it!",
-  "Almost there! Give it another try!",
-  "Keep going, you're close!",
-  "Don't give up! You'll get it next time!",
-  "That's not quite right, try once more!",
-  "Let's try again, you're learning!"
+  "Sometimes letters can be tricky.",
+  "This word begins with a different letter.",
+  "The sound is a bit different from what you chose.",
+  "Words and letters have interesting connections.",
+  "There's another letter that goes with this picture.",
+  "Each word has its own special starting sound."
 ];
 
 async function generateAudioFile(text, outputPath) {

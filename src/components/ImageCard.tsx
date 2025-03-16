@@ -45,7 +45,7 @@ export const ImageCard = ({ currentImage, feedback }: ImageCardProps) => {
             />
           </div>
           
-          <div className="absolute bottom-0 w-full bg-white/80 backdrop-blur-sm py-2 px-4">
+          <div className="absolute bottom-0 w-full bg-white backdrop-blur-sm py-2 px-4">
             <p className="text-lg md:text-xl text-gray-700 font-medium text-center">{word}</p>
           </div>
           
