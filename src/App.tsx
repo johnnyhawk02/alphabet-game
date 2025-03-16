@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 interface AlphabetData {
   letter: string;
-  color: string;
+  image: string;
 }
 
 const AlphabetGameApp = () => {
@@ -17,32 +17,32 @@ const AlphabetGameApp = () => {
   
   // Sample alphabet data - in a real app, these would point to your actual images folder
   const alphabetData: AlphabetData[] = [
-    { letter: 'a', color: 'bg-red-500' },
-    { letter: 'b', color: 'bg-purple-800' },
-    { letter: 'c', color: 'bg-yellow-400' },
-    { letter: 'd', color: 'bg-purple-600' },
-    { letter: 'e', color: 'bg-green-500' },
-    { letter: 'f', color: 'bg-red-600' },
-    { letter: 'g', color: 'bg-yellow-400' },
-    { letter: 'h', color: 'bg-green-600' },
-    { letter: 'i', color: 'bg-purple-800' },
-    { letter: 'j', color: 'bg-red-500' },
-    { letter: 'k', color: 'bg-purple-600' },
-    { letter: 'l', color: 'bg-purple-800' },
-    { letter: 'm', color: 'bg-blue-500' },
-    { letter: 'n', color: 'bg-blue-800' },
-    { letter: 'o', color: 'bg-red-500' },
-    { letter: 'p', color: 'bg-yellow-500' },
-    { letter: 'q', color: 'bg-blue-600' },
-    { letter: 'r', color: 'bg-green-700' },
-    { letter: 's', color: 'bg-purple-700' },
-    { letter: 't', color: 'bg-yellow-400' },
-    { letter: 'u', color: 'bg-green-600' },
-    { letter: 'v', color: 'bg-purple-700' },
-    { letter: 'w', color: 'bg-red-600' },
-    { letter: 'x', color: 'bg-yellow-400' },
-    { letter: 'y', color: 'bg-purple-800' },
-    { letter: 'z', color: 'bg-red-600' }
+    { letter: 'a', image: 'src/images/apple.jpeg' },
+    { letter: 'b', image: 'src/images/baby.jpeg' },
+    { letter: 'c', image: 'src/images/cat.jpeg' },
+    { letter: 'd', image: 'src/images/dog.jpeg' },
+    { letter: 'e', image: 'src/images/eyes.jpeg' },
+    { letter: 'f', image: 'src/images/fish.jpeg' },
+    { letter: 'g', image: 'src/images/giraffe.jpeg' },
+    { letter: 'h', image: 'src/images/hat.jpeg' },
+    { letter: 'i', image: 'src/images/icecream.jpeg' },
+    { letter: 'j', image: 'src/images/jacket.jpeg' },
+    { letter: 'k', image: 'src/images/kite.jpeg' },
+    { letter: 'l', image: 'src/images/lion.jpeg' },
+    { letter: 'm', image: 'src/images/monkey.jpeg' },
+    { letter: 'n', image: 'src/images/nose.jpeg' },
+    { letter: 'o', image: 'src/images/owl.jpeg' },
+    { letter: 'p', image: 'src/images/pig.jpeg' },
+    { letter: 'q', image: 'src/images/queen.jpeg' },
+    { letter: 'r', image: 'src/images/rabbit.jpeg' },
+    { letter: 's', image: 'src/images/sun.jpeg' },
+    { letter: 't', image: 'src/images/tiger.jpeg' },
+    { letter: 'u', image: 'src/images/umbrella.jpeg' },
+    { letter: 'v', image: 'src/images/violin.jpeg' },
+    { letter: 'w', image: 'src/images/whale.jpeg' },
+    { letter: 'x', image: 'src/images/xylophone.jpeg' },
+    { letter: 'y', image: 'src/images/yak.jpeg' },
+    { letter: 'z', image: 'src/images/zebra.jpeg' }
   ];
   
   // Get random letter
@@ -166,8 +166,7 @@ const AlphabetGameApp = () => {
           <div key={rowIndex} className="flex justify-center mb-2">
             {row.map((letter) => {
               // Find the color for this letter
-              const letterData = alphabetData.find(item => item.letter === letter);
-              const bgColor = letterData ? letterData.color : 'bg-gray-500';
+              const bgColor = 'bg-gray-500';
               
               return (
                 <button
@@ -185,30 +184,25 @@ const AlphabetGameApp = () => {
     );
   };
   
-  // Render current letter display for demo
-  const renderCurrentLetter = () => {
+  // Render current image display
+  const renderCurrentImage = () => {
     if (!currentImage) return null;
     
     return (
-      <div className="w-64 h-64 flex items-center justify-center rounded-lg mb-6 overflow-hidden bg-yellow-100 border-4 border-yellow-500">
-        <div className={`w-40 h-40 ${currentImage.color} rounded-full flex items-center justify-center`}>
-          <span className="text-8xl font-bold text-white">
-            {currentImage.letter.toUpperCase()}
-          </span>
-        </div>
+      <div className="w-96 h-96 flex items-center justify-center rounded-lg mb-6 overflow-hidden bg-yellow-100">
+        <img src={currentImage.image} alt={currentImage.letter} className="w-full h-full object-cover" />
       </div>
     );
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-r from-yellow-100 to-orange-100 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="bg-gradient-to-r from-orange-500 to-yellow-500 p-4 text-white text-center">
+    <div className="min-h-screen h-screen w-screen bg-gradient-to-r from-yellow-100 to-orange-100 flex flex-col items-center justify-center overflow-x-hidden">
+      <div className="w-full h-full max-w-none bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col justify-center items-center">
+        <div className="bg-gradient-to-r from-orange-500 to-yellow-500 p-4 text-white text-center w-full">
           <h1 className="text-3xl font-bold">Alphabet Mystery Box</h1>
           <p className="text-lg">Press the letter that matches the image!</p>
         </div>
-        
-        <div className="p-6">
+        <div className="p-6 flex-grow w-full flex flex-col justify-center items-center">
           {!isPlaying && !gameOver ? (
             <div className="text-center p-8">
               <h2 className="text-2xl font-bold mb-4">Welcome to Alphabet Mystery Box!</h2>
@@ -251,7 +245,7 @@ const AlphabetGameApp = () => {
               </div>
               
               <div className="relative">
-                {renderCurrentLetter()}
+                {renderCurrentImage()}
                 
                 {feedback && (
                   <div className={`absolute inset-0 flex items-center justify-center text-2xl font-bold ${
