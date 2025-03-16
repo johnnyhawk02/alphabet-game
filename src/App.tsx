@@ -41,11 +41,8 @@ const AlphabetGameApp = () => {
     } else {
       const word = currentImage?.image.split('/').pop()?.split('.')[0].toLowerCase() || '';
       handleWrongAnswer(word);
-      if (!state.gameOver) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        clearFeedback();
-        await showNewImage();
-      }
+      await new Promise(resolve => setTimeout(resolve, 500));
+      clearFeedback();
     }
   };
 

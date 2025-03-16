@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'ABeeZee', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -158,3 +158,68 @@ button:focus-visible {
   25% { transform: rotate(-3deg); }
   75% { transform: rotate(3deg); }
 }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%, 45% { transform: translateX(-10px); }
+  30%, 60% { transform: translateX(10px); }
+  75% { transform: translateX(-5px); }
+  90% { transform: translateX(5px); }
+}
+
+@keyframes wrong-overlay {
+  0%, 100% { opacity: 0; }
+  25%, 75% { opacity: 0.8; }
+}
+
+@keyframes pop-and-scale {
+  0% { transform: scale(1); }
+  20% { transform: scale(1.2); }
+  35% { transform: scale(0.9); }
+  50% { transform: scale(1.15); }
+  65% { transform: scale(0.95); }
+  80% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes sparkle {
+  0% { opacity: 0; transform: scale(0) rotate(0deg); }
+  20% { opacity: 1; transform: scale(1) rotate(180deg); }
+  80% { opacity: 1; transform: scale(1) rotate(360deg); }
+  100% { opacity: 0; transform: scale(0) rotate(540deg); }
+}
+
+@keyframes correct-overlay {
+  0% { opacity: 0; transform: scale(0.8); }
+  20% { opacity: 0.7; transform: scale(1.1); }
+  40% { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.2); }
+}
+
+@keyframes shrink {
+  0% { transform: scale(1); }
+  100% { transform: scale(0); }
+}
+
+@keyframes expand {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+@keyframes zoom-in {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+.sparkle {
+  animation: sparkle 1.5s ease-in-out forwards;
+}
+
+.sparkle:nth-child(1) { animation-delay: 0s; }
+.sparkle:nth-child(2) { animation-delay: 0.2s; }
+.sparkle:nth-child(3) { animation-delay: 0.4s; }
+.sparkle:nth-child(4) { animation-delay: 0.6s; }
+.sparkle:nth-child(5) { animation-delay: 0.8s; }
+.sparkle:nth-child(6) { animation-delay: 1s; }
+sparkle:nth-child(7) { animation-delay: 1.2s; }
+.sparkle:nth-child(8) { animation-delay: 1.4s; }

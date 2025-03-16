@@ -99,10 +99,10 @@ export const useGameState = () => {
         lives: newLives,
         gameOver,
         failedWords: updatedFailedWords,
-        feedback: `Wrong! The correct letter was ${currentImage?.letter.toUpperCase()}`
+        feedback: 'Wrong'
       };
     });
-  }, [currentImage]);
+  }, []);
 
   const clearFeedback = useCallback(() => {
     setState(prev => ({ ...prev, feedback: '' }));
