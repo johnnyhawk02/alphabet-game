@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ImageCard } from './components/ImageCard';
 import { Keyboard } from './components/Keyboard';
 import { ScoreBoard } from './components/ScoreBoard';
@@ -21,48 +21,61 @@ const AlphabetGameApp = () => {
   } = useGameState();
 
   const { playWord, playCongratsMessage, playSupportiveMessage, cleanup: cleanupAudio } = useAudio();
+  const [audioPlaying, setAudioPlaying] = useState(false);
   const userInteractedRef = useRef(false);
 
   const showNewImage = async () => {
     const newImage = getNextLetter();
     setCurrentImage(newImage);
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Add a small delay before playing the word
+    await new Promise(resolve => setTimeout(resolve, 300));
     const baseName = newImage.image.split('/').pop()?.split('.')[0].toLowerCase();
     if (baseName) {
+      // Set audio playing state
+      setAudioPlaying(true);
+      // Wait for the word audio to complete before allowing next interaction
       await playWord(baseName);
+      setAudioPlaying(false);
     }
   };
 
   const handleAnswer = async (key: string) => {
+    // Don't process input if audio is still playing
+    if (audioPlaying) return;
+    
     // Mark that user has interacted with the page (helps with audio playback)
     userInteractedRef.current = true;
     
     if (currentImage && key === currentImage.letter) {
       handleCorrectAnswer();
       
-      // Play congratulatory message
+      // Play congratulatory message and wait for it to finish
       try {
+        setAudioPlaying(true);
         await playCongratsMessage();
+        // Wait a bit after audio completes
+        await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
         console.error('Failed to play congratulatory message:', error);
+      } finally {
+        setAudioPlaying(false);
       }
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
       clearFeedback();
       await showNewImage();
     } else {
       const word = currentImage?.image.split('/').pop()?.split('.')[0].toLowerCase() || '';
       handleWrongAnswer(word);
       
-      // Play supportive message with a slight delay
-      setTimeout(async () => {
-        try {
-          // Play only the supportive message
-          await playSupportiveMessage();
-        } catch (error) {
-          console.error('Failed to play supportive message:', error);
-        }
-      }, 100);
+      // Play supportive message and wait for it to finish
+      try {
+        setAudioPlaying(true);
+        await playSupportiveMessage();
+      } catch (error) {
+        console.error('Failed to play supportive message:', error);
+      } finally {
+        setAudioPlaying(false);
+      }
       
       await new Promise(resolve => setTimeout(resolve, 500));
       clearFeedback();
@@ -76,13 +89,17 @@ const AlphabetGameApp = () => {
     const firstImage = startGame();
     const baseName = firstImage.image.split('/').pop()?.split('.')[0].toLowerCase();
     if (baseName) {
+      // Set audio playing state
+      setAudioPlaying(true);
+      // Wait for the initial word audio to complete
       await playWord(baseName);
+      setAudioPlaying(false);
     }
   };
 
   const isProcessing = useKeyboardInput({
     onKeyPress: handleAnswer,
-    isEnabled: state.isPlaying && !state.gameOver,
+    isEnabled: state.isPlaying && !state.gameOver && !audioPlaying,
     isGameStarted: state.isPlaying,
     onEnterPress: handleStart
   });
@@ -122,7 +139,7 @@ const AlphabetGameApp = () => {
               <ImageCard currentImage={currentImage} feedback={state.feedback} />
               <Keyboard 
                 onLetterClick={handleAnswer} 
-                disabled={isProcessing} 
+                disabled={isProcessing || audioPlaying} 
                 correctLetter={currentImage?.letter}
               />
             </div>
