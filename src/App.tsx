@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ImageCard } from './components/ImageCard';
 import { Keyboard } from './components/Keyboard';
 import { ScoreBoard } from './components/ScoreBoard';
@@ -20,7 +20,8 @@ const AlphabetGameApp = () => {
     setCurrentImage
   } = useGameState();
 
-  const { playWord, cleanup: cleanupAudio } = useAudio();
+  const { playWord, playCongratsMessage, playSupportiveMessage, cleanup: cleanupAudio } = useAudio();
+  const userInteractedRef = useRef(false);
 
   const showNewImage = async () => {
     const newImage = getNextLetter();
@@ -33,20 +34,45 @@ const AlphabetGameApp = () => {
   };
 
   const handleAnswer = async (key: string) => {
+    // Mark that user has interacted with the page (helps with audio playback)
+    userInteractedRef.current = true;
+    
     if (currentImage && key === currentImage.letter) {
       handleCorrectAnswer();
+      
+      // Play congratulatory message
+      try {
+        await playCongratsMessage();
+      } catch (error) {
+        console.error('Failed to play congratulatory message:', error);
+      }
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       clearFeedback();
       await showNewImage();
     } else {
       const word = currentImage?.image.split('/').pop()?.split('.')[0].toLowerCase() || '';
       handleWrongAnswer(word);
+      
+      // Play supportive message with a slight delay
+      setTimeout(async () => {
+        try {
+          // Play only the supportive message
+          await playSupportiveMessage();
+        } catch (error) {
+          console.error('Failed to play supportive message:', error);
+        }
+      }, 100);
+      
       await new Promise(resolve => setTimeout(resolve, 500));
       clearFeedback();
     }
   };
 
   const handleStart = async () => {
+    // Mark that user has interacted with the page (helps with audio playback)
+    userInteractedRef.current = true;
+    
     const firstImage = startGame();
     const baseName = firstImage.image.split('/').pop()?.split('.')[0].toLowerCase();
     if (baseName) {
@@ -61,9 +87,19 @@ const AlphabetGameApp = () => {
     onEnterPress: handleStart
   });
 
+  // Set up event listeners for user interaction
   useEffect(() => {
+    const markInteracted = () => {
+      userInteractedRef.current = true;
+    };
+    
+    window.addEventListener('click', markInteracted);
+    window.addEventListener('keydown', markInteracted);
+    
     return () => {
       cleanupAudio();
+      window.removeEventListener('click', markInteracted);
+      window.removeEventListener('keydown', markInteracted);
     };
   }, [cleanupAudio]);
 
