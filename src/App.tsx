@@ -1,8 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface AlphabetData {
   letter: string;
   image: string;
+}
+
+interface FailedWord {
+  word: string;
+  count: number;
 }
 
 const AlphabetGameApp = () => {
@@ -12,10 +17,11 @@ const AlphabetGameApp = () => {
   const [lives, setLives] = useState(3);
   const [gameOver, setGameOver] = useState(false);
   const [feedback, setFeedback] = useState('');
-  const [level, setLevel] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [shuffledDeck, setShuffledDeck] = useState<AlphabetData[]>([]);
-  
+  const [failedWords, setFailedWords] = useState<FailedWord[]>([]);
+  const isProcessingRef = useRef(false);
+
   // Fisher-Yates shuffle algorithm
   const shuffleArray = (array: AlphabetData[]): AlphabetData[] => {
     const newArray = [...array];
@@ -94,35 +100,37 @@ const AlphabetGameApp = () => {
 
   // Start the game
   const startGame = async () => {
-    // Initialize with a fresh shuffled deck
     const initialDeck = shuffleArray(getImageMap());
-    setShuffledDeck(initialDeck.slice(1)); // Remove first card as we'll use it
-    
+    setShuffledDeck(initialDeck.slice(1));
     setScore(0);
     setLives(3);
     setGameOver(false);
-    setLevel(1);
     setIsPlaying(true);
     setFeedback('');
+    setFailedWords([]);
     
-    // Set and show first image
     setCurrentImage(initialDeck[0]);
     const baseName = initialDeck[0].image.split('/').pop()?.split('.')[0].toLowerCase();
     if (baseName) {
       await playCurrentWordAudio(baseName);
     }
   };
-  
-  // Handle keyboard input
+
+  // Handle keyboard input with debouncing
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isPlaying || gameOver) return;
+    const handleKeyDown = async (event: KeyboardEvent) => {
+      if (!isPlaying || gameOver || isProcessingRef.current) return;
       
       const keyPressed = event.key.toLowerCase();
       
       // Check if the pressed key is a letter
       if (/^[a-z]$/.test(keyPressed)) {
-        checkAnswer(keyPressed);
+        isProcessingRef.current = true;
+        await checkAnswer(keyPressed);
+        // Add a small delay before allowing next input
+        setTimeout(() => {
+          isProcessingRef.current = false;
+        }, 500);
       }
     };
     
@@ -132,29 +140,33 @@ const AlphabetGameApp = () => {
     };
   }, [currentImage, isPlaying, gameOver]);
   
-  // Check if the answer is correct
-  const checkAnswer = (key: string) => {
+  // Add global keyboard handler for Enter key
+  useEffect(() => {
+    const handleGlobalKeyDown = (event: KeyboardEvent) => {
+      if ((event.key === 'Enter' || event.key === 'Return') && !isPlaying && !gameOver) {
+        startGame();
+      }
+    };
+    
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [isPlaying, gameOver]);
+
+  // Convert checkAnswer to handle async operation
+  const checkAnswer = async (key: string) => {
     if (currentImage && key === currentImage.letter) {
-      handleCorrectAnswer();
+      await handleCorrectAnswer();
     } else {
-      handleWrongAnswer();
+      await handleWrongAnswer();
     }
   };
-  
+
   // Handle correct answer
   const handleCorrectAnswer = async () => {
-    const newScore = score + (level * 10);
-    setScore(newScore);
-    
-    // Show feedback
+    setScore(score + 10);
     setFeedback('Correct!');
-    
-    // Increase level every 5 correct answers
-    if (newScore % 50 === 0) {
-      setLevel((prev) => prev + 1);
-    }
-    
-    // Wait 1 second before showing next image and playing audio
     await new Promise(resolve => setTimeout(resolve, 1000));
     setFeedback('');
     await showNewImage();
@@ -165,7 +177,20 @@ const AlphabetGameApp = () => {
     const newLives = lives - 1;
     setLives(newLives);
     
-    // Show feedback
+    // Track the failed word
+    const currentWord = currentImage?.image.split('/').pop()?.split('.')[0].toLowerCase() || '';
+    setFailedWords(prev => {
+      const existing = prev.find(fw => fw.word === currentWord);
+      if (existing) {
+        return prev.map(fw => 
+          fw.word === currentWord 
+            ? { ...fw, count: fw.count + 1 }
+            : fw
+        );
+      }
+      return [...prev, { word: currentWord, count: 1 }];
+    });
+    
     setFeedback(`Wrong! The correct letter was ${currentImage?.letter.toUpperCase()}`);
     
     if (newLives <= 0) {
@@ -173,16 +198,19 @@ const AlphabetGameApp = () => {
       return;
     }
     
-    // Wait 1.5 seconds before showing next image and playing audio
     await new Promise(resolve => setTimeout(resolve, 1500));
     setFeedback('');
     await showNewImage();
   };
-  
-  // Handle letter button click
-  const handleLetterClick = (letter: string) => {
-    if (!isPlaying || gameOver) return;
-    checkAnswer(letter);
+
+  // Handle letter button click with debouncing
+  const handleLetterClick = async (letter: string) => {
+    if (!isPlaying || gameOver || isProcessingRef.current) return;
+    isProcessingRef.current = true;
+    await checkAnswer(letter);
+    setTimeout(() => {
+      isProcessingRef.current = false;
+    }, 500);
   };
   
   // Create the keyboard
@@ -194,36 +222,36 @@ const AlphabetGameApp = () => {
     ];
     
     return (
-      <div className="mt-4">
+      <div className="mt-2 bg-gray-100/50 backdrop-blur-sm p-2 md:p-4 rounded-2xl shadow-lg w-full max-w-[95vw]">
         {rows.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex justify-center mb-2">
-            {row.map((letter) => {
-              // Find the color for this letter
-              const bgColor = 'bg-gray-500';
-              
-              return (
-                <button
-                  key={letter}
-                  onClick={() => handleLetterClick(letter)}
-                  className={`w-12 h-12 mx-1 rounded-full text-white font-bold text-xl ${bgColor} shadow-lg flex items-center justify-center transform transition-transform duration-100 active:scale-95 focus:outline-none`}
-                >
-                  {letter.toUpperCase()}
-                </button>
-              );
-            })}
+          <div key={rowIndex} className="flex justify-center mb-1 md:mb-2 gap-1">
+            {row.map((letter) => (
+              <button
+                key={letter}
+                onClick={() => handleLetterClick(letter)}
+                className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-white text-gray-700 font-bold text-sm md:text-xl shadow-md 
+                          hover:bg-gray-50 active:bg-gray-200
+                          flex items-center justify-center
+                          transform transition-all duration-150 
+                          hover:scale-105 active:scale-95
+                          focus:outline-none focus:ring-2 focus:ring-orange-400"
+              >
+                {letter.toUpperCase()}
+              </button>
+            ))}
           </div>
         ))}
       </div>
     );
   };
-  
+
   // Render current image display
   const renderCurrentImage = () => {
     if (!currentImage) return null;
     
     return (
-      <div className="w-96 h-96 flex items-center justify-center rounded-lg mb-6 overflow-hidden bg-yellow-100">
-        <img src={currentImage.image} alt={currentImage.letter} className="w-full h-full object-cover" />
+      <div className="w-[280px] h-[280px] md:w-[350px] md:h-[350px] flex items-center justify-center rounded-2xl mb-4 md:mb-6 overflow-hidden bg-white shadow-xl">
+        <img src={currentImage.image} alt={currentImage.letter} className="w-full h-full object-contain p-4" />
       </div>
     );
   };
@@ -239,74 +267,72 @@ const AlphabetGameApp = () => {
   }, [audio]);
 
   return (
-    <div className="min-h-screen h-screen w-screen bg-gradient-to-r from-yellow-100 to-orange-100 flex flex-col items-center justify-center overflow-x-hidden">
-      <div className="w-full h-full max-w-none bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col justify-center items-center">
-        <div className="bg-gradient-to-r from-orange-500 to-yellow-500 p-4 text-white text-center w-full">
-          <h1 className="text-3xl font-bold">Alphabet Mystery Box</h1>
-          <p className="text-lg">Press the letter that matches the image!</p>
+    <div className="min-h-screen h-screen w-screen bg-gradient-to-r from-yellow-100 to-orange-100 flex flex-col items-center overflow-hidden">
+      <div className="fixed top-2 md:top-4 right-2 md:right-4 flex gap-1 md:gap-4 text-xs md:text-base z-10">
+        <div className="bg-white/80 backdrop-blur-sm p-1.5 md:p-3 rounded-lg text-gray-800 shadow-lg">
+          <span className="font-bold">Score:</span> {score}
         </div>
-        <div className="p-6 flex-grow w-full flex flex-col justify-center items-center">
+        <div className="bg-white/80 backdrop-blur-sm p-1.5 md:p-3 rounded-lg text-gray-800 shadow-lg">
+          <span className="font-bold">Lives:</span> {'❤️'.repeat(lives)}
+        </div>
+      </div>
+
+      <div className="w-full h-full max-w-3xl bg-white/90 backdrop-blur-sm rounded-none md:rounded-2xl shadow-xl flex flex-col items-center p-2 md:p-6">
+        <div className="flex-grow w-full flex flex-col justify-center items-center gap-2 md:gap-6">
           {!isPlaying && !gameOver ? (
-            <div className="text-center p-8">
-              <h2 className="text-2xl font-bold mb-4">Welcome to Alphabet Mystery Box!</h2>
-              <p className="mb-6">Press the letter on your keyboard that matches the image shown. Be quick!</p>
+            <div className="text-center p-4">
+              <h2 className="text-lg md:text-2xl font-bold mb-3">Welcome to Alphabet Mystery Box!</h2>
+              <p className="mb-4 text-sm md:text-base">Press the letter on your keyboard that matches the image shown.</p>
+              <p className="mb-4 text-sm text-gray-600">Press Enter to start</p>
               <button 
                 onClick={startGame}
-                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transition-transform transform hover:scale-105"
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full text-base md:text-xl shadow-lg transition-transform transform hover:scale-105"
               >
                 Start Game
               </button>
             </div>
           ) : gameOver ? (
-            <div className="text-center p-8">
-              <h2 className="text-3xl font-bold mb-4">Game Over!</h2>
-              <p className="text-xl mb-2">Your Score: {score}</p>
-              <p className="text-lg mb-6">Level Reached: {level}</p>
+            <div className="text-center p-4">
+              <h2 className="text-xl md:text-3xl font-bold mb-3">Game Over!</h2>
+              <p className="text-base md:text-xl mb-2">Your Score: {score}</p>
+              {failedWords.length > 0 && (
+                <div className="mt-4 mb-4">
+                  <h3 className="text-lg font-bold mb-2">Words to Practice:</h3>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {failedWords.map(({ word, count }) => (
+                      <span key={word} className="bg-red-100 text-red-800 px-2 py-1 rounded">
+                        {word} ({count}x)
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               <button 
                 onClick={startGame}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transition-transform transform hover:scale-105"
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full text-base md:text-xl shadow-lg transition-transform transform hover:scale-105 mt-4"
               >
                 Play Again
               </button>
             </div>
           ) : (
-            <div className="flex flex-col items-center">
-              <div className="flex justify-between w-full mb-4">
-                <div className="bg-blue-100 p-2 rounded-lg text-blue-800">
-                  <span className="font-bold">Score:</span> {score}
-                </div>
-                <div className="bg-purple-100 p-2 rounded-lg text-purple-800">
-                  <span className="font-bold">Level:</span> {level}
-                </div>
-                <div className="bg-red-100 p-2 rounded-lg text-red-800">
-                  <span className="font-bold">Lives:</span> {'❤️'.repeat(lives)}
-                </div>
-              </div>
-              
+            <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto gap-2">
               <div className="relative">
                 {renderCurrentImage()}
-                
                 {feedback && (
-                  <div className={`absolute inset-0 flex items-center justify-center text-2xl font-bold ${
+                  <div className={`absolute inset-0 flex items-center justify-center text-lg md:text-2xl font-bold ${
                     feedback.startsWith('Correct') ? 'text-green-600' : 'text-red-600'
-                  }`}>
+                  } bg-white/80 backdrop-blur-sm rounded-lg`}>
                     {feedback}
                   </div>
                 )}
               </div>
               
-              {renderKeyboard()}
-              
-              <p className="mt-4 text-gray-600">
-                Press the letter on your keyboard or tap/click the button
-              </p>
+              <div className="w-full">
+                {renderKeyboard()}
+              </div>
             </div>
           )}
         </div>
-      </div>
-      
-      <div className="mt-6 text-center text-gray-600">
-        <p>You can also use your keyboard to play!</p>
       </div>
     </div>
   );
