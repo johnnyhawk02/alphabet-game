@@ -17,7 +17,7 @@ export const ImageCard = ({ currentImage, feedback }: ImageCardProps) => {
       <div className="flex flex-col items-center">
         <div className={`w-[280px] h-[280px] md:w-[350px] md:h-[350px] flex flex-col items-center justify-between rounded-2xl overflow-hidden bg-white shadow-xl relative 
           ${isWrong ? 'animate-[shake_0.5s_ease-in-out]' : ''}
-          ${isCorrect ? 'animate-[pop-and-scale_1.2s_ease-in-out,normal-size_0.5s_ease-out_1.2s,wait_1s_1.7s,shrink_0.5s_ease-in-out_2.7s,expand_0.5s_ease-in-out_3.2s]' : 'animate-[zoom-in_0.5s_ease-in-out]'}`}> {/* Added zoom-in animation for new turn */}
+          ${isCorrect ? 'animate-[pop-and-scale_1.2s_ease-in-out,normal-size_0.5s_ease-out_1.2s,wait_1s_1.7s,shrink_0.5s_ease-in-out_2.7s]' : 'animate-[zoom-in_0.5s_ease-out]'}`}> {/* Added zoom-in animation for new turn */}
           <img 
             src={currentImage.image} 
             alt={currentImage.letter} 
