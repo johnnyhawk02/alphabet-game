@@ -2,7 +2,7 @@ import sharp from 'sharp';
 import { readdir } from 'fs/promises';
 import { join } from 'path';
 
-const imagesDir = new URL('../src/images', import.meta.url).pathname;
+const imagesDir = new URL('../public/images', import.meta.url).pathname;
 
 async function convertPngToJpeg() {
   try {

@@ -10,8 +10,7 @@ dotenv.config();
 const ELEVENLABS_API_KEY = process.env.VITE_ELEVENLABS_API_KEY;
 const VOICE_ID = 'XB0fDUnXU5powFXDhCwa'; // Voice ID
 
-
-const imagesDir = new URL('../src/images', import.meta.url).pathname;
+const imagesDir = new URL('../public/images', import.meta.url).pathname;
 const audioDir = new URL('../public/audio', import.meta.url).pathname;
 
 async function generateAudioFile(text, outputPath) {

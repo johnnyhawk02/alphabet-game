@@ -34,18 +34,20 @@ const AlphabetGameApp = () => {
 
   // Get all image files from the directory
   const getImageMap = () => {
-    const images = import.meta.glob('/src/images/*.(jpeg|png)');
+    const imageFiles = Object.keys(import.meta.glob('/public/images/*.(jpeg|png)'));
     const imageMap: { [key: string]: string[] } = {};
     
-    Object.keys(images).forEach(path => {
-      const fileName = path.split('/').pop()?.toLowerCase() ?? '';
+    imageFiles.forEach(path => {
+      // Convert /public path to root path for browser
+      const browserPath = path.replace('/public', '');
+      const fileName = browserPath.split('/').pop()?.toLowerCase() ?? '';
       const letter = fileName[0];  // Get first letter of filename
       
       if (letter && /^[a-z]$/.test(letter)) {
         if (!imageMap[letter]) {
           imageMap[letter] = [];
         }
-        imageMap[letter].push(path);
+        imageMap[letter].push(browserPath);
       }
     });
     
@@ -140,20 +142,6 @@ const AlphabetGameApp = () => {
     };
   }, [currentImage, isPlaying, gameOver]);
   
-  // Add global keyboard handler for Enter key
-  useEffect(() => {
-    const handleGlobalKeyDown = (event: KeyboardEvent) => {
-      if ((event.key === 'Enter' || event.key === 'Return') && !isPlaying && !gameOver) {
-        startGame();
-      }
-    };
-    
-    window.addEventListener('keydown', handleGlobalKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleGlobalKeyDown);
-    };
-  }, [isPlaying, gameOver]);
-
   // Convert checkAnswer to handle async operation
   const checkAnswer = async (key: string) => {
     if (currentImage && key === currentImage.letter) {
@@ -283,7 +271,6 @@ const AlphabetGameApp = () => {
             <div className="text-center p-4">
               <h2 className="text-lg md:text-2xl font-bold mb-3">Welcome to Alphabet Mystery Box!</h2>
               <p className="mb-4 text-sm md:text-base">Press the letter on your keyboard that matches the image shown.</p>
-              <p className="mb-4 text-sm text-gray-600">Press Enter to start</p>
               <button 
                 onClick={startGame}
                 className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full text-base md:text-xl shadow-lg transition-transform transform hover:scale-105"
