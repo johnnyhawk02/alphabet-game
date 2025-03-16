@@ -210,21 +210,21 @@ const AlphabetGameApp = () => {
     ];
     
     return (
-      <div className="mt-2 bg-gray-100/50 backdrop-blur-sm p-2 md:p-4 rounded-2xl shadow-lg w-full max-w-[95vw]">
+      <div className="mt-2 bg-gray-100/50 backdrop-blur-sm p-3 md:p-6 rounded-2xl shadow-lg w-full max-w-[95vw]">
         {rows.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex justify-center mb-1 md:mb-2 gap-1">
+          <div key={rowIndex} className="flex justify-center mb-2 md:mb-3 gap-1.5 md:gap-2">
             {row.map((letter) => (
               <button
                 key={letter}
                 onClick={() => handleLetterClick(letter)}
-                className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-white text-gray-700 font-bold text-sm md:text-xl shadow-md 
+                className="w-10 h-10 md:w-16 md:h-16 rounded-lg bg-white text-gray-700 text-base md:text-2xl shadow-md 
                           hover:bg-gray-50 active:bg-gray-200
                           flex items-center justify-center
                           transform transition-all duration-150 
                           hover:scale-105 active:scale-95
-                          focus:outline-none focus:ring-2 focus:ring-orange-400"
+                          focus:outline-none focus:ring-0"
               >
-                {letter.toUpperCase()}
+                {letter}
               </button>
             ))}
           </div>
@@ -237,9 +237,16 @@ const AlphabetGameApp = () => {
   const renderCurrentImage = () => {
     if (!currentImage) return null;
     
+    const word = currentImage.image.split('/').pop()?.split('.')[0].toLowerCase() || '';
+    
     return (
-      <div className="w-[280px] h-[280px] md:w-[350px] md:h-[350px] flex items-center justify-center rounded-2xl mb-4 md:mb-6 overflow-hidden bg-white shadow-xl">
-        <img src={currentImage.image} alt={currentImage.letter} className="w-full h-full object-contain p-4" />
+      <div className="flex flex-col items-center">
+        <div className="w-[280px] h-[280px] md:w-[350px] md:h-[350px] flex flex-col items-center justify-between rounded-2xl overflow-hidden bg-white shadow-xl relative">
+          <img src={currentImage.image} alt={currentImage.letter} className="w-full h-full object-contain p-4" />
+          <div className="absolute bottom-0 w-full bg-white/80 backdrop-blur-sm py-2 px-4">
+            <p className="text-lg md:text-xl text-gray-700 font-medium text-center">{word}</p>
+          </div>
+        </div>
       </div>
     );
   };
