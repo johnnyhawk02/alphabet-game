@@ -231,13 +231,45 @@ async function generateAllAudio() {
       await fs.mkdir(lettersDir, { recursive: true });
     }
 
+    // Mapping of letters to their phonetic letter names
+    const letterNames = {
+      'a': 'A',
+      'b': 'B',
+      'c': 'C',
+      'd': 'D',
+      'e': 'E',
+      'f': 'F',
+      'g': 'G',
+      'h': 'H',
+      'i': 'I',
+      'j': 'J',
+      'k': 'K',
+      'l': 'L',
+      'm': 'M',
+      'n': 'N',
+      'o': 'O',
+      'p': 'P',
+      'q': 'Q',
+      'r': 'R',
+      's': 'S',
+      't': 'T',
+      'u': 'U',
+      'v': 'V',
+      'w': 'W',
+      'x': 'X',
+      'y': 'Y',
+      'z': 'Zed'  // Using British/Commonwealth pronunciation for Z
+    };
+
     const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
     for (const letter of alphabet) {
       const outputPath = path.join(lettersDir, `${letter}.mp3`);
       
       if (!(await directoryExists(outputPath))) {
-        console.log(`Processing letter: ${letter}`);
-        await generateAudioFile(letter, outputPath);
+        // Use the letter name instead of just the letter
+        const letterName = letterNames[letter];
+        console.log(`Processing letter: ${letter} (${letterName})`);
+        await generateAudioFile(letterName, outputPath);
         await new Promise(resolve => setTimeout(resolve, 1000));
       } else {
         console.log(`Skipping letter ${letter} - already exists`);
