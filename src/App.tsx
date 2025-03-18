@@ -20,7 +20,7 @@ const AlphabetGameApp = () => {
     setCurrentImage
   } = useGameState();
 
-  const { playWord, playCongratsMessage, playSupportiveMessage, cleanup: cleanupAudio } = useAudio();
+  const { playWord, playCongratsMessage, playSupportiveMessage, playWordAfterPause, cleanup: cleanupAudio } = useAudio();
   const [audioPlaying, setAudioPlaying] = useState(false);
   const userInteractedRef = useRef(false);
 
@@ -71,8 +71,11 @@ const AlphabetGameApp = () => {
       try {
         setAudioPlaying(true);
         await playSupportiveMessage();
+        
+        // After a pause, play just the word
+        await playWordAfterPause(word);
       } catch (error) {
-        console.error('Failed to play supportive message:', error);
+        console.error('Failed to play audio messages:', error);
       } finally {
         setAudioPlaying(false);
       }
@@ -122,7 +125,7 @@ const AlphabetGameApp = () => {
 
   return (
     <div className="min-h-screen h-screen w-screen bg-gradient-to-r from-yellow-100 to-orange-100 flex flex-col items-center overflow-hidden">
-      <ScoreBoard score={state.score} lives={state.lives} />
+      <ScoreBoard score={state.score} />
 
       <div className="w-full h-full max-w-3xl bg-white/90 backdrop-blur-sm rounded-none md:rounded-2xl shadow-xl flex flex-col items-center p-2 md:p-6">
         <div className="flex-grow w-full flex flex-col justify-center items-center gap-2 md:gap-6">

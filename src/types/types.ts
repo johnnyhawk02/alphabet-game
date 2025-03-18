@@ -10,7 +10,6 @@ export interface FailedWord {
 
 export interface GameState {
   score: number;
-  lives: number;
   gameOver: boolean;
   isPlaying: boolean;
   feedback: string;

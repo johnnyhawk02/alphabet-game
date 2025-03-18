@@ -12,7 +12,9 @@
     "generate-audio": "node scripts/generateAudio.js"
   },
   "dependencies": {
+    "@google-cloud/text-to-speech": "^5.8.1",
     "autoprefixer": "^10.4.21",
+    "axios": "^1.8.3",
     "dotenv": "^16.4.7",
     "node-fetch": "^3.3.2",
     "react": "^19.0.0",

@@ -4,7 +4,6 @@ import { AlphabetData, GameState } from '../types/types';
 export const useGameState = () => {
   const [state, setState] = useState<GameState>({
     score: 0,
-    lives: 3,
     gameOver: false,
     isPlaying: false,
     feedback: '',
@@ -62,7 +61,6 @@ export const useGameState = () => {
     setShuffledDeck(initialDeck.slice(1));
     setState({
       score: 0,
-      lives: 3,
       gameOver: false,
       isPlaying: true,
       feedback: '',
@@ -82,9 +80,6 @@ export const useGameState = () => {
 
   const handleWrongAnswer = useCallback((word: string) => {
     setState(prev => {
-      const newLives = prev.lives - 1;
-      const gameOver = newLives <= 0;
-      
       const updatedFailedWords = [...prev.failedWords];
       const existingWord = updatedFailedWords.find(fw => fw.word === word);
       
@@ -96,8 +91,6 @@ export const useGameState = () => {
 
       return {
         ...prev,
-        lives: newLives,
-        gameOver,
         failedWords: updatedFailedWords,
         feedback: 'Wrong'
       };

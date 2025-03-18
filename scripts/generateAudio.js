@@ -1,83 +1,62 @@
-import { readdir, mkdir, writeFile } from 'fs/promises';
-import { join, dirname } from 'path';
-import { existsSync } from 'fs';
-import fetch from 'node-fetch';
+import textToSpeech from '@google-cloud/text-to-speech';
+import { promises as fs } from 'fs';
+import path from 'path';
 import dotenv from 'dotenv';
 
-// Load environment variables
 dotenv.config();
 
-const ELEVENLABS_API_KEY = process.env.VITE_ELEVENLABS_API_KEY;
-const VOICE_ID = 'XB0fDUnXU5powFXDhCwa'; // Voice ID
+const client = new textToSpeech.TextToSpeechClient();
 
-const imagesDir = new URL('../public/images', import.meta.url).pathname;
-const audioDir = new URL('../public/audio', import.meta.url).pathname;
-const wordsDir = join(audioDir, 'words');
+const synthesizeSpeech = async (text) => {
+  const request = {
+    input: { text },
+    voice: {
+      languageCode: 'en-GB',
+      name: 'en-GB-Chirp3-HD-Zephyr',
+    },
+    audioConfig: { audioEncoding: 'MP3' },
+  };
 
-// Add congratulatory messages - modified to be more declarative for children with PDA
-const congratulatoryMessages = [
-  "That's the right letter.",
-  "The letter matches the picture.",
-  "That letter and picture go together.",
-  "The answer is correct.",
-  "That's how the word starts.",
-  "The letter and sound match."
-];
-
-// Add supportive messages - modified to be more declarative and less demanding for PDA
-const supportiveMessages = [
-  "Sometimes letters can be tricky.",
-  "This word begins with a different letter.",
-  "The sound is a bit different from what you chose.",
-  "Words and letters have interesting connections.",
-  "There's another letter that goes with this picture.",
-  "Each word has its own special starting sound."
-];
+  const [response] = await client.synthesizeSpeech(request);
+  return response.audioContent;
+};
 
 async function generateAudioFile(text, outputPath) {
   try {
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'audio/mpeg',
-        'Content-Type': 'application/json',
-        'xi-api-key': ELEVENLABS_API_KEY
-      },
-      body: JSON.stringify({
-        text,
-        model_id: 'eleven_monolingual_v1',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.5
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to generate audio: ${response.statusText}`);
-    }
-
-    const buffer = await response.buffer();
-    await writeFile(outputPath, buffer);
+    const audioContent = await synthesizeSpeech(text);
+    await fs.writeFile(outputPath, audioContent, 'binary');
     console.log(`Generated audio file: ${outputPath}`);
   } catch (error) {
     console.error(`Error generating audio for "${text}":`, error);
   }
 }
 
+async function directoryExists(path) {
+  try {
+    await fs.access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function generateAllAudio() {
   try {
+    const imagesDir = new URL('../public/images', import.meta.url).pathname;
+    const audioDir = new URL('../public/audio', import.meta.url).pathname;
+    const wordsDir = path.join(audioDir, 'words');
+
     // Create audio directory if it doesn't exist
-    if (!existsSync(audioDir)) {
-      await mkdir(audioDir, { recursive: true });
+    if (!(await directoryExists(audioDir))) {
+      await fs.mkdir(audioDir, { recursive: true });
     }
     
     // Create words directory if it doesn't exist
-    if (!existsSync(wordsDir)) {
-      await mkdir(wordsDir, { recursive: true });
+    if (!(await directoryExists(wordsDir))) {
+      await fs.mkdir(wordsDir, { recursive: true });
     }
 
-    const files = await readdir(imagesDir);
+    const files = await fs.readdir(imagesDir);
     const processedNames = new Set();
 
     for (const file of files) {
@@ -94,10 +73,10 @@ async function generateAllAudio() {
 
       processedNames.add(baseName);
 
-      const outputPath = join(wordsDir, `${baseName}.mp3`);
+      const outputPath = path.join(wordsDir, `${baseName}.mp3`);
       
       // Skip if audio file already exists
-      if (existsSync(outputPath)) {
+      if (await directoryExists(outputPath)) {
         console.log(`Skipping ${baseName} - audio file already exists`);
         continue;
       }
@@ -111,17 +90,55 @@ async function generateAllAudio() {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
-    // Generate congratulatory messages
-    console.log("Generating congratulatory messages...");
-    const congratsDir = join(audioDir, "congrats");
-    if (!existsSync(congratsDir)) {
-      await mkdir(congratsDir, { recursive: true });
+    // Generate the "the word is" prompt
+    console.log("Generating 'the word is' prompt...");
+    const otherDir = path.join(audioDir, "other");
+    if (!(await directoryExists(otherDir))) {
+      await fs.mkdir(otherDir, { recursive: true });
+    }
+    
+    const wordIsPath = path.join(otherDir, `the_word_is.mp3`);
+    if (!(await directoryExists(wordIsPath))) {
+      console.log(`Processing: "the word is" prompt`);
+      await generateAudioFile("the word is", wordIsPath);
+    } else {
+      console.log(`Skipping "the word is" - already exists`);
     }
 
+    // Generate congratulatory messages
+    console.log("Generating congratulatory messages...");
+    const congratsDir = path.join(audioDir, "congrats");
+    if (!(await directoryExists(congratsDir))) {
+      await fs.mkdir(congratsDir, { recursive: true });
+    }
+
+    const congratulatoryMessages = [
+      "The letter matches!",
+      "That fits!",
+      "They go together.",
+      "That's a match.",
+      "Look! They connect.",
+      "The sounds match.",
+      "That works.",
+      "You found it.",
+      "That's right.",
+      "It fits nicely.",
+      "Wow, look at that!",
+      "It matches.",
+      "The sounds fit.",
+      "Good match.",
+      "Nice finding.",
+      "They belong together.",
+      "Look how they match.",
+      "You did it.",
+      "That's it.",
+      "They're the same sound."
+    ];
+
     for (let i = 0; i < congratulatoryMessages.length; i++) {
-      const outputPath = join(congratsDir, `congrats_${i + 1}.mp3`);
+      const outputPath = path.join(congratsDir, `congrats_${i + 1}.mp3`);
       
-      if (!existsSync(outputPath)) {
+      if (!(await directoryExists(outputPath))) {
         console.log(`Processing: Congratulation message ${i + 1}`);
         await generateAudioFile(congratulatoryMessages[i], outputPath);
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -132,15 +149,38 @@ async function generateAllAudio() {
 
     // Generate supportive messages
     console.log("Generating supportive messages...");
-    const supportDir = join(audioDir, "support");
-    if (!existsSync(supportDir)) {
-      await mkdir(supportDir, { recursive: true });
+    const supportDir = path.join(audioDir, "support");
+    if (!(await directoryExists(supportDir))) {
+      await fs.mkdir(supportDir, { recursive: true });
     }
 
+    const supportiveMessages = [
+      "Sounds can be tricky.",
+      "Want to try again?",
+      "Maybe another letter?",
+      "Sounds can be silly.",
+      "Try a different one?",
+      "It's okay to keep looking.",
+      "No rush.",
+      "It's your choice.",
+      "Maybe try again?",
+      "It's okay.",
+      "Let's look again.",
+      "Want to see more?",
+      "What do you think?",
+      "You choose what's next.",
+      "Let's listen again.",
+      "You can decide.",
+      "Sounds can be funny.",
+      "Break time?",
+      "Take your time.",
+      "You're the boss."
+    ];
+
     for (let i = 0; i < supportiveMessages.length; i++) {
-      const outputPath = join(supportDir, `support_${i + 1}.mp3`);
+      const outputPath = path.join(supportDir, `support_${i + 1}.mp3`);
       
-      if (!existsSync(outputPath)) {
+      if (!(await directoryExists(outputPath))) {
         console.log(`Processing: Supportive message ${i + 1}`);
         await generateAudioFile(supportiveMessages[i], outputPath);
         await new Promise(resolve => setTimeout(resolve, 1000));
