@@ -195,7 +195,7 @@ const AlphabetGameApp = () => {
     <div className={containerClass}>
       <ScoreBoard score={state.score} />
 
-      <div className="game-content">
+      <div className="game-content min-h-[100svh]"> {/* Use svh for better iOS support */}
         {!state.isPlaying && !state.gameOver ? (
           <WelcomeScreen onStart={handleStart} />
         ) : state.gameOver ? (
@@ -205,20 +205,24 @@ const AlphabetGameApp = () => {
             onRestart={handleStart}
           />
         ) : (
-          <div className="flex flex-col items-center justify-between h-full">
-            <div className="image-area mb-8">
+          <div className="flex flex-col items-center justify-between h-full gap-4">
+            <div className="flex-1 w-full flex items-center justify-center">
               <ImageCard currentImage={currentImage} feedback={state.feedback} />
             </div>
             
             {/* Letter Options */}
-            <div className="letter-options w-full py-4">
-              <div className="flex justify-center gap-6">
+            <div className="letter-options w-full pb-safe"> {/* Add safe area padding */}
+              <div className="flex justify-center gap-4 md:gap-6 p-4">
                 {options.map((letter) => (
                   <button
                     key={letter}
                     onClick={() => !audioPlaying && handleAnswer(letter)}
                     disabled={audioPlaying}
-                    className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-white text-gray-700 text-6xl md:text-8xl font-bold shadow-lg flex items-center justify-center border-4 border-gray-300 hover:bg-gray-100"
+                    className="w-[25vw] h-[25vw] max-w-[140px] max-h-[140px] rounded-full bg-white text-gray-700 text-4xl md:text-6xl font-bold shadow-lg 
+                             flex items-center justify-center border-4 border-gray-300/50
+                             hover:bg-gray-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed
+                             transition-all duration-150 transform hover:scale-105
+                             hover:border-gray-400 hover:shadow-xl"
                   >
                     {letter}
                   </button>

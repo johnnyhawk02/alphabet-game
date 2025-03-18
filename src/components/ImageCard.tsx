@@ -11,10 +11,8 @@ export const ImageCard = ({ currentImage, feedback }: ImageCardProps) => {
   const imgRef = useRef<HTMLImageElement>(null);
   
   useEffect(() => {
-    // Reset image loaded state when current image changes
     setIsImageLoaded(false);
     
-    // Preload the image
     if (currentImage) {
       const img = new Image();
       img.onload = () => setIsImageLoaded(true);
@@ -29,13 +27,12 @@ export const ImageCard = ({ currentImage, feedback }: ImageCardProps) => {
   const isCorrect = feedback.startsWith('Correct');
   
   return (
-    <div className="w-4/5 h-full flex items-center justify-center p-4 md:p-8"> {/* Added padding with responsive sizes */}
-      <div className="flex flex-col items-center justify-center h-full">
-        <div className={`w-full max-w-full h-auto aspect-square flex flex-col items-center justify-between rounded-2xl overflow-hidden bg-white shadow-xl relative 
+    <div className="w-full md:w-4/5 max-h-[60vh] flex items-center justify-center p-2 md:p-4"> {/* Adjusted width and max-height */}
+      <div className="flex flex-col items-center justify-center w-full h-full">
+        <div className={`w-full max-w-[min(90vw,60vh)] aspect-square flex flex-col items-center justify-between rounded-2xl overflow-hidden bg-white shadow-xl relative 
           ${isWrong ? 'animate-[shake_0.5s_ease-in-out]' : ''}
           ${isCorrect ? 'animate-[pop-and-scale_1.2s_ease-in-out,normal-size_0.5s_ease-out_1.2s,wait_1s_1.7s,shrink_0.5s_ease-in-out_2.7s]' : isImageLoaded ? 'animate-[zoom-in_0.5s_ease-out]' : ''}`}>
-          {/* Image is rendered with padding */}
-          <div className={`w-full h-full transition-opacity duration-100 aspect-[4/3] p-4 md:p-6 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}>
+          <div className={`w-full h-full transition-opacity duration-100 p-3 md:p-4 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}>
             <img 
               ref={imgRef}
               src={currentImage.image} 
@@ -45,8 +42,8 @@ export const ImageCard = ({ currentImage, feedback }: ImageCardProps) => {
             />
           </div>
           
-          <div className="absolute bottom-0 w-full bg-white backdrop-blur-sm py-3 px-4">
-            <p className="text-4xl md:text-6xl text-gray-700 font-bold text-center">{word}</p>
+          <div className="absolute bottom-0 w-full bg-white/90 backdrop-blur-sm py-2 md:py-3 px-4">
+            <p className="text-3xl md:text-4xl lg:text-5xl text-gray-700 font-bold text-center">{word}</p>
           </div>
           
           {isWrong && (

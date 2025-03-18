@@ -14,11 +14,15 @@ export const GameOverScreen = ({ score, failedWords, onRestart }: GameOverScreen
       {failedWords.length > 0 && (
         <div className="mt-4 mb-4">
           <h3 className="text-lg font-bold mb-2">Words to Practice:</h3>
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex flex-wrap justify-center gap-3">
             {failedWords.map(({ word, count }) => (
-              <span key={word} className="bg-red-100 text-red-800 px-2 py-1 rounded">
-                {word} ({count}x)
-              </span>
+              <div 
+                key={word} 
+                className="bg-red-100 text-red-800 w-20 h-20 rounded-full flex flex-col items-center justify-center shadow-md"
+              >
+                <span className="text-sm font-medium">{word}</span>
+                <span className="text-xs">({count}x)</span>
+              </div>
             ))}
           </div>
         </div>

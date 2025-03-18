@@ -6,6 +6,7 @@
   font-family: 'ABeeZee', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  height: 100%;
 }
 
 /* Simple reset for body to ensure proper sizing and layout */
@@ -13,18 +14,25 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  width: 100vw;
+  min-height: 100svh;
+  width: 100%;
   overflow-x: hidden;
   background-color: pink; /* Changed background to pink */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
 }
 
 /* Simple viewport-filling container */
 .app-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  width: 100vw;
+  min-height: 100vh;
+  min-height: 100svh;
+  width: 100%;
   overflow: hidden;
+  position: fixed;
+  inset: 0;
 }
 
 /* Game content takes up all available space */
@@ -34,7 +42,9 @@ body {
   flex: 1;
   width: 100%;
   margin: 0 auto;
-  padding: 0.5rem;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Image area expands to fill available space */
@@ -52,6 +62,12 @@ body {
   width: 100%;
 }
 
+/* Letter options area */
+.letter-options {
+  padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  margin-top: auto;
+}
+
 /* Button styling */
 button {
   border-radius: 8px;
@@ -62,7 +78,8 @@ button {
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.25s;
+  touch-action: manipulation;
 }
 
 button:hover {
@@ -72,6 +89,11 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Utility class for bottom safe area padding */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 1rem);
 }
 
 /* Animation keyframes */
@@ -162,6 +184,7 @@ button:focus-visible {
   position: fixed;
   width: 100%;
   height: 100%;
+  height: 100svh;
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
@@ -170,10 +193,24 @@ button:focus-visible {
 /* Prevent pull-to-refresh in standalone mode */
 .standalone-mode body {
   overscroll-behavior-y: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 /* Fix for iPad keyboard appearing */
 .standalone-mode input, 
 .standalone-mode textarea {
   font-size: 16px;
+}
+
+/* Ensure proper sizing on iPad */
+@supports (-webkit-touch-callout: none) {
+  .game-content {
+    height: -webkit-fill-available;
+  }
+  
+  .app-container {
+    height: -webkit-fill-available;
+  }
 }
