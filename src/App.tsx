@@ -124,30 +124,33 @@ const AlphabetGameApp = () => {
   }, [cleanupAudio]);
 
   return (
-    <div className="min-h-screen h-screen w-screen bg-gradient-to-r from-yellow-100 to-orange-100 flex flex-col items-center overflow-hidden">
+    <div className="app-container bg-gradient-to-r from-yellow-100 to-orange-100">
       <ScoreBoard score={state.score} />
 
-      <div className="w-full h-full max-w-3xl bg-white/90 backdrop-blur-sm rounded-none md:rounded-2xl shadow-xl flex flex-col items-center p-2 md:p-6">
-        <div className="flex-grow w-full flex flex-col justify-center items-center gap-2 md:gap-6">
-          {!state.isPlaying && !state.gameOver ? (
-            <WelcomeScreen onStart={handleStart} />
-          ) : state.gameOver ? (
-            <GameOverScreen
-              score={state.score}
-              failedWords={state.failedWords}
-              onRestart={handleStart}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto gap-2">
+      <div className="game-content">
+        {!state.isPlaying && !state.gameOver ? (
+          <WelcomeScreen onStart={handleStart} />
+        ) : state.gameOver ? (
+          <GameOverScreen
+            score={state.score}
+            failedWords={state.failedWords}
+            onRestart={handleStart}
+          />
+        ) : (
+          <>
+            <div className="image-area">
               <ImageCard currentImage={currentImage} feedback={state.feedback} />
+            </div>
+            
+            <div className="keyboard-area">
               <Keyboard 
                 onLetterClick={handleAnswer} 
                 disabled={isProcessing || audioPlaying} 
                 correctLetter={currentImage?.letter}
               />
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

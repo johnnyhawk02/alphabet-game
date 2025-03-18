@@ -10,11 +10,11 @@ export const Keyboard = ({ onLetterClick, disabled, correctLetter }: KeyboardPro
     ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
     ['z', 'x', 'c', 'v', 'b', 'n', 'm']
   ];
-  
+
   return (
-    <div className="mt-2 bg-gray-100/50 backdrop-blur-sm p-3 md:p-6 rounded-2xl shadow-lg w-full max-w-[95vw]">
+    <div className="w-full bg-gray-100/50 backdrop-blur-sm p-2 rounded-2xl shadow-lg">
       {rows.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex justify-center mb-2 md:mb-3 gap-1.5 md:gap-2">
+        <div key={rowIndex} className="flex justify-center mb-1 gap-1">
           {row.map((letter) => {
             const isCorrect = letter === correctLetter;
             return (
@@ -22,7 +22,7 @@ export const Keyboard = ({ onLetterClick, disabled, correctLetter }: KeyboardPro
                 key={letter}
                 onClick={() => !disabled && onLetterClick(letter)}
                 disabled={disabled}
-                className={`w-10 h-10 md:w-16 md:h-16 rounded-lg bg-white text-gray-700 text-base md:text-2xl shadow-md 
+                className={`flex-1 max-w-[10%] aspect-square rounded-lg bg-white text-gray-700 text-xl shadow-md 
                           hover:bg-gray-50 active:bg-gray-200
                           flex items-center justify-center
                           transform transition-all duration-150

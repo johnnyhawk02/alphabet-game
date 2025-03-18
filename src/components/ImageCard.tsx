@@ -29,11 +29,11 @@ export const ImageCard = ({ currentImage, feedback }: ImageCardProps) => {
   const isCorrect = feedback.startsWith('Correct');
   
   return (
-    <div className="relative">
-      <div className="flex flex-col items-center">
-        <div className={`w-[280px] h-[280px] md:w-[350px] md:h-[350px] flex flex-col items-center justify-between rounded-2xl overflow-hidden bg-white shadow-xl relative 
+    <div className="w-full h-full flex items-center justify-center p-8"> {/* Increased padding */}
+      <div className="flex flex-col items-center justify-center h-full">
+        <div className={`w-full max-w-full h-auto aspect-square flex flex-col items-center justify-between rounded-2xl overflow-hidden bg-white shadow-xl relative 
           ${isWrong ? 'animate-[shake_0.5s_ease-in-out]' : ''}
-          ${isCorrect ? 'animate-[pop-and-scale_1.2s_ease-in-out,normal-size_0.5s_ease-out_1.2s,wait_1s_1.7s,shrink_0.5s_ease-in-out_2.7s]' : 'animate-[zoom-in_0.5s_ease-out]'}`}>
+          ${isCorrect ? 'animate-[pop-and-scale_1.2s_ease-in-out,normal-size_0.5s_ease-out_1.2s,wait_1s_1.7s,shrink_0.5s_ease-in-out_2.7s]' : isImageLoaded ? 'animate-[zoom-in_0.5s_ease-out]' : ''}`}>
           {/* Image is rendered but initially invisible until loaded */}
           <div className={`w-full h-full transition-opacity duration-100 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}>
             <img 
@@ -46,7 +46,7 @@ export const ImageCard = ({ currentImage, feedback }: ImageCardProps) => {
           </div>
           
           <div className="absolute bottom-0 w-full bg-white backdrop-blur-sm py-2 px-4">
-            <p className="text-lg md:text-xl text-gray-700 font-medium text-center">{word}</p>
+            <p className="text-lg text-gray-700 font-medium text-center">{word}</p>
           </div>
           
           {isWrong && (

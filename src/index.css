@@ -6,39 +6,53 @@
   font-family: 'ABeeZee', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
+/* Simple reset for body to ensure proper sizing and layout */
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  padding: 0;
   min-height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* Simple viewport-filling container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
+/* Game content takes up all available space */
+.game-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 0.5rem;
+}
+
+/* Image area expands to fill available space */
+.image-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Keyboard stays at bottom */
+.keyboard-area {
+  margin-top: auto;
+  width: 100%;
+}
+
+/* Button styling */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -50,107 +64,21 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
-
-@media (min-width: 768px) {
-  .container {
-    max-width: 768px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .container {
-    max-width: 1024px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .container {
-    max-width: 1280px;
-  }
-}
-
-@media (min-width: 1536px) {
-  .container {
-    max-width: 1536px;
-  }
-}
-
-/* iPad specific styles */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .container {
-    width: 100%;
-    height: 100%;
-    padding: 2rem;
-  }
-
-  .keyboard button {
-    width: 3rem;
-    height: 3rem;
-  }
-
-  .image-container {
-    width: 20rem;
-    height: 20rem;
-  }
-}
-
-@media (orientation: portrait) {
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .keyboard {
-    flex-direction: column;
-  }
-
-  .keyboard button {
-    width: 3rem;
-    height: 3rem;
-    margin: 0.5rem;
-  }
-
-  .image-container {
-    width: 20rem;
-    height: 20rem;
-  }
-}
-
+/* Animation keyframes */
 @keyframes pulse-ring {
-  0% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.3;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
+  0% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.3; }
+  100% { transform: scale(1); opacity: 0.5; }
 }
 
 @keyframes wiggle {
@@ -189,23 +117,6 @@ button:focus-visible {
   100% { opacity: 0; transform: scale(0) rotate(540deg); }
 }
 
-@keyframes correct-overlay {
-  0% { opacity: 0; transform: scale(0.8); }
-  20% { opacity: 0.7; transform: scale(1.1); }
-  40% { opacity: 0.5; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.2); }
-}
-
-@keyframes shrink {
-  0% { transform: scale(1); }
-  100% { transform: scale(0); }
-}
-
-@keyframes expand {
-  0% { transform: scale(0); }
-  100% { transform: scale(1); }
-}
-
 @keyframes zoom-in {
   0% { transform: scale(0); }
   100% { transform: scale(1); }
@@ -221,5 +132,5 @@ button:focus-visible {
 .sparkle:nth-child(4) { animation-delay: 0.6s; }
 .sparkle:nth-child(5) { animation-delay: 0.8s; }
 .sparkle:nth-child(6) { animation-delay: 1s; }
-sparkle:nth-child(7) { animation-delay: 1.2s; }
+.sparkle:nth-child(7) { animation-delay: 1.2s; }
 .sparkle:nth-child(8) { animation-delay: 1.4s; }
