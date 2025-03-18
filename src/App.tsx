@@ -28,9 +28,41 @@ const AlphabetGameApp = () => {
   const [isKeyboardEnabled, setIsKeyboardEnabled] = useState(false); // State to manage keyboard enable/disable
   const { isStandalone, isIOS } = useStandaloneMode();
   const [optionsVisible, setOptionsVisible] = useState(false);
+  const [visibleLetters, setVisibleLetters] = useState<string[]>([]);
+  const [highlightedLetter, setHighlightedLetter] = useState<string | null>(null);
+
+  // Function to reveal letters one at a time with audio
+  const revealLettersWithAudio = async (letters: string[]) => {
+    setVisibleLetters([]);
+    setOptionsVisible(true);
+    setAudioPlaying(true);
+    
+    for (let i = 0; i < letters.length; i++) {
+      // First, reveal the letter visually
+      setVisibleLetters(prev => [...prev, letters[i]]);
+      
+      // Highlight the current letter and play its sound
+      setHighlightedLetter(letters[i]);
+      try {
+        await playLetter(letters[i]);
+        // Add a small pause between letters
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (error) {
+        console.error("Error playing letter sound:", error);
+      } finally {
+        // Remove highlight after playing the sound and pausing
+        setHighlightedLetter(null);
+      }
+    }
+    
+    setAudioPlaying(false);
+    setIsKeyboardEnabled(true);
+  };
 
   const showNewImage = async () => {
     setOptionsVisible(false); // Hide options before transition
+    setVisibleLetters([]);
+    setHighlightedLetter(null);
     setBackgroundColor('bg-gray-500');
     setIsKeyboardEnabled(false);
 
@@ -52,7 +84,8 @@ const AlphabetGameApp = () => {
     }
 
     const allOptions = [correctLetter, ...randomLetters];
-    setOptions(allOptions.sort(() => Math.random() - 0.5));
+    const shuffledOptions = allOptions.sort(() => Math.random() - 0.5);
+    setOptions(shuffledOptions);
 
     // Add a longer pause before starting audio sequence
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -63,13 +96,15 @@ const AlphabetGameApp = () => {
       try {
         // Only play the question
         await playQuestionPrompt(baseName);
+        
+        // After question is played, reveal letters one by one
+        await revealLettersWithAudio(shuffledOptions);
       } catch (error) {
         console.error('Error in audio sequence:', error);
-      } finally {
         setAudioPlaying(false);
         setIsKeyboardEnabled(true);
-        // Show options after audio finishes
-        setTimeout(() => setOptionsVisible(true), 100);
+        setOptionsVisible(true);
+        setVisibleLetters(shuffledOptions); // Show all letters if there's an error
       }
     }
   };
@@ -142,6 +177,8 @@ const AlphabetGameApp = () => {
 
   const handleStart = async () => {
     setOptionsVisible(false);
+    setVisibleLetters([]);
+    setHighlightedLetter(null);
     userInteractedRef.current = true;
     
     const firstImage = startGame();
@@ -162,7 +199,8 @@ const AlphabetGameApp = () => {
     }
     
     const allOptions = [correctLetter, ...randomLetters];
-    setOptions(allOptions.sort(() => Math.random() - 0.5));
+    const shuffledOptions = allOptions.sort(() => Math.random() - 0.5);
+    setOptions(shuffledOptions);
     
     const baseName = firstImage.image.split('/').pop()?.split('.')[0].toLowerCase();
     if (baseName) {
@@ -170,10 +208,15 @@ const AlphabetGameApp = () => {
       try {
         // Play the question for the first turn
         await playQuestionPrompt(baseName);
-      } finally {
+        
+        // After question is played, reveal letters one by one
+        await revealLettersWithAudio(shuffledOptions);
+      } catch (error) {
+        console.error('Error in audio sequence:', error);
         setAudioPlaying(false);
-        // Show options after initial audio
-        setTimeout(() => setOptionsVisible(true), 100);
+        setIsKeyboardEnabled(true);
+        setOptionsVisible(true);
+        setVisibleLetters(shuffledOptions); // Show all letters if there's an error
       }
     }
   };
@@ -231,12 +274,14 @@ const AlphabetGameApp = () => {
                   <button
                     key={letter}
                     onClick={() => !audioPlaying && handleAnswer(letter)}
-                    disabled={audioPlaying || !optionsVisible}
-                    className="w-[25vw] h-[25vw] max-w-[140px] max-h-[140px] rounded-full bg-white text-gray-700 text-4xl md:text-6xl font-bold shadow-lg 
+                    disabled={audioPlaying || !optionsVisible || !visibleLetters.includes(letter)}
+                    className={`w-[25vw] h-[25vw] max-w-[140px] max-h-[140px] rounded-full bg-white text-gray-700 text-4xl md:text-6xl font-bold shadow-lg 
                              flex items-center justify-center border-4 border-gray-300/50
                              hover:bg-gray-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed
                              transition-all duration-150 transform hover:scale-105
-                             hover:border-gray-400 hover:shadow-xl"
+                             hover:border-gray-400 hover:shadow-xl
+                             ${!visibleLetters.includes(letter) ? 'opacity-0' : 'opacity-100'}
+                             ${highlightedLetter === letter ? 'animate-[highlight-letter_1.5s_ease-in-out] border-yellow-400 bg-yellow-50' : ''}`}
                   >
                     {letter}
                   </button>
