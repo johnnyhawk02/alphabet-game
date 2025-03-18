@@ -23,7 +23,7 @@ export const Keyboard = ({ onLetterClick, disabled, correctLetter }: KeyboardPro
                   key={letter}
                   onClick={() => !disabled && onLetterClick(letter)}
                   disabled={disabled}
-                  className={`w-[10.64vw] h-[10.64vw] md:w-16 md:h-16 rounded-lg bg-white text-gray-700 text-base md:text-xl shadow-md 
+                  className={`w-[10.64vw] h-[10.64vw] md:w-16 md:h-16 rounded-lg bg-white text-gray-700 text-4xl md:text-6xl shadow-md 
                             hover:bg-gray-50 active:bg-gray-200
                             flex items-center justify-center
                             transform transition-all duration-150

@@ -189,6 +189,41 @@ async function generateAllAudio() {
       }
     }
 
+    // Add variations for "Which letter does $word begin with?"
+    console.log("Generating 'which letter does $word begin with?' prompts...");
+    const questionDir = path.join(audioDir, "questions");
+    if (!(await directoryExists(questionDir))) {
+      await fs.mkdir(questionDir, { recursive: true });
+    }
+
+    const questionVariations = [
+      "Which letter does $word begin with?",
+      "Can you tell me the first letter of $word?",
+      "What letter starts the word $word?",
+      "Do you know the first letter of $word?",
+      "What is the starting letter of $word?"
+    ];
+
+    for (const file of files) {
+      const baseName = file.toLowerCase()
+        .replace(/\(\d+\)/, '') // Remove (1), (2), etc.
+        .replace(/\.[^/.]+$/, '') // Remove file extension
+        .trim();
+
+      for (let i = 0; i < questionVariations.length; i++) {
+        const questionText = questionVariations[i].replace('$word', baseName);
+        const outputPath = path.join(questionDir, `${baseName}_question_${i + 1}.mp3`);
+
+        if (!(await directoryExists(outputPath))) {
+          console.log(`Processing: Question variation ${i + 1} for ${baseName}`);
+          await generateAudioFile(questionText, outputPath);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          console.log(`Skipping ${baseName}_question_${i + 1}.mp3 - already exists`);
+        }
+      }
+    }
+
     console.log('Audio generation completed!');
   } catch (error) {
     console.error('Error processing files:', error);

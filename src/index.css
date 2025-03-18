@@ -110,6 +110,20 @@ button:focus-visible {
   100% { transform: scale(1); }
 }
 
+@keyframes normal-size {
+  0% { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes wait {
+  0%, 100% { transform: scale(1); }
+}
+
+@keyframes shrink {
+  0% { transform: scale(1); }
+  100% { transform: scale(0); opacity: 0; }
+}
+
 @keyframes sparkle {
   0% { opacity: 0; transform: scale(0) rotate(0deg); }
   20% { opacity: 1; transform: scale(1) rotate(180deg); }
@@ -134,3 +148,32 @@ button:focus-visible {
 .sparkle:nth-child(6) { animation-delay: 1s; }
 .sparkle:nth-child(7) { animation-delay: 1.2s; }
 .sparkle:nth-child(8) { animation-delay: 1.4s; }
+
+/* iOS safe area and standalone mode styles */
+.ios-safe-area {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  min-height: -webkit-fill-available;
+}
+
+.standalone-mode {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent pull-to-refresh in standalone mode */
+.standalone-mode body {
+  overscroll-behavior-y: none;
+}
+
+/* Fix for iPad keyboard appearing */
+.standalone-mode input, 
+.standalone-mode textarea {
+  font-size: 16px;
+}

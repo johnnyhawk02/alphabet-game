@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { ImageCard } from './components/ImageCard';
-import { Keyboard } from './components/Keyboard';
 import { ScoreBoard } from './components/ScoreBoard';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { GameOverScreen } from './components/GameOverScreen';
 import { useGameState } from './hooks/useGameState';
 import { useAudio } from './hooks/useAudio';
-import { useKeyboardInput } from './hooks/useKeyboardInput';
+import { useKeyboardInput } from './hooks/useKeyboardInput'; // Import the useKeyboardInput hook
+import { useStandaloneMode } from './hooks/useStandaloneMode';
 
 const AlphabetGameApp = () => {
   const {
@@ -20,105 +20,149 @@ const AlphabetGameApp = () => {
     setCurrentImage
   } = useGameState();
 
-  const { playWord, playCongratsMessage, playSupportiveMessage, playWordAfterPause, cleanup: cleanupAudio } = useAudio();
+  const { playWord, playCongratsMessage, playSupportiveMessage, playWordAfterPause, cleanup: cleanupAudio, playQuestionPrompt } = useAudio();
   const [audioPlaying, setAudioPlaying] = useState(false);
   const userInteractedRef = useRef(false);
   const [backgroundColor, setBackgroundColor] = useState('bg-gray-500'); // Default to grey for new round
+  const [options, setOptions] = useState<string[]>([]);
+  const [isKeyboardEnabled, setIsKeyboardEnabled] = useState(false); // State to manage keyboard enable/disable
+  const { isStandalone, isIOS } = useStandaloneMode();
 
   const showNewImage = async () => {
-    setBackgroundColor('bg-gray-500'); // Set background to grey for new round
+    setBackgroundColor('bg-gray-500');
+    setIsKeyboardEnabled(false);
+
     const newImage = getNextLetter();
     setCurrentImage(newImage);
-    // Add a small delay before playing the word
-    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Generate random options including the correct letter
+    const letters = 'abcdefghijklmnopqrstuvwxyz';
+    const correctLetter = newImage.letter;
+    const tempLetters = [correctLetter];
+    const randomLetters: string[] = [];
+
+    while (randomLetters.length < 2) {
+      const randLetter = letters[Math.floor(Math.random() * letters.length)];
+      if (!tempLetters.includes(randLetter)) {
+        randomLetters.push(randLetter);
+        tempLetters.push(randLetter);
+      }
+    }
+
+    const allOptions = [correctLetter, ...randomLetters];
+    setOptions(allOptions.sort(() => Math.random() - 0.5));
+
+    // Add a longer pause before starting audio sequence
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     const baseName = newImage.image.split('/').pop()?.split('.')[0].toLowerCase();
     if (baseName) {
-      // Set audio playing state
       setAudioPlaying(true);
-      // Wait for the word audio to complete before allowing next interaction
-      await playWord(baseName);
-      setAudioPlaying(false);
+      try {
+        // Only play the question
+        await playQuestionPrompt(baseName);
+      } catch (error) {
+        console.error('Error in audio sequence:', error);
+      } finally {
+        setAudioPlaying(false);
+        setIsKeyboardEnabled(true);
+      }
     }
   };
 
   const handleAnswer = async (key: string) => {
-    // Don't process input if audio is still playing
     if (audioPlaying) return;
-    
-    // Mark that user has interacted with the page (helps with audio playback)
     userInteractedRef.current = true;
-    
-    if (currentImage && key === currentImage.letter) {
-      setBackgroundColor('bg-green-500'); // Set background to green for correct answer
-      handleCorrectAnswer();
 
-      // Play correct answer sound
-      const correctSound = new Audio('/audio/other/correct.mp3');
-      correctSound.play();
-      
-      // Play congratulatory message and wait for it to finish
+    if (currentImage && key === currentImage.letter) {
+      setBackgroundColor('bg-green-500');
+      handleCorrectAnswer();
+      setAudioPlaying(true);
+
       try {
-        setAudioPlaying(true);
+        // Pre-load and play correct sound
+        const correctSound = new Audio('/audio/other/correct.mp3');
+        await new Promise((resolve) => {
+          correctSound.oncanplaythrough = resolve;
+          correctSound.load();
+        });
+        correctSound.volume = 0.5;
+        await correctSound.play();
+
+        // Play congratulatory message
         await playCongratsMessage();
-        // Wait a bit after audio completes
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
-        console.error('Failed to play congratulatory message:', error);
+        console.error('Failed to play audio sequence:', error);
       } finally {
         setAudioPlaying(false);
       }
-      
+
       clearFeedback();
       await showNewImage();
     } else {
-      setBackgroundColor('bg-red-500'); // Set background to red for wrong answer
+      setBackgroundColor('bg-red-500');
       const word = currentImage?.image.split('/').pop()?.split('.')[0].toLowerCase() || '';
       handleWrongAnswer(word);
 
-      // Play wrong answer sound
-      const wrongSound = new Audio('/audio/other/wrong.mp3');
-      wrongSound.play();
-      
-      // Play supportive message and wait for it to finish
       try {
+        // Pre-load and play wrong sound
+        const wrongSound = new Audio('/audio/other/wrong.mp3');
+        await new Promise((resolve) => {
+          wrongSound.oncanplaythrough = resolve;
+          wrongSound.load();
+        });
+        await wrongSound.play();
+
         setAudioPlaying(true);
         await playSupportiveMessage();
-        
-        // After a pause, play just the word
         await playWordAfterPause(word);
       } catch (error) {
         console.error('Failed to play audio messages:', error);
       } finally {
         setAudioPlaying(false);
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 500));
       clearFeedback();
-      setBackgroundColor('bg-gray-500'); // Reset background to grey after wrong answer
+      setBackgroundColor('bg-gray-500');
     }
   };
 
   const handleStart = async () => {
-    // Mark that user has interacted with the page (helps with audio playback)
     userInteractedRef.current = true;
     
     const firstImage = startGame();
+    
+    // Generate random options including the correct letter
+    const letters = 'abcdefghijklmnopqrstuvwxyz';
+    const correctLetter = firstImage.letter;
+    
+    const tempLetters = [correctLetter];
+    const randomLetters: string[] = [];
+    
+    while (randomLetters.length < 2) {
+      const randLetter = letters[Math.floor(Math.random() * letters.length)];
+      if (!tempLetters.includes(randLetter)) {
+        randomLetters.push(randLetter);
+        tempLetters.push(randLetter);
+      }
+    }
+    
+    const allOptions = [correctLetter, ...randomLetters];
+    setOptions(allOptions.sort(() => Math.random() - 0.5));
+    
     const baseName = firstImage.image.split('/').pop()?.split('.')[0].toLowerCase();
     if (baseName) {
-      // Set audio playing state
       setAudioPlaying(true);
-      // Wait for the initial word audio to complete
-      await playWord(baseName);
-      setAudioPlaying(false);
+      try {
+        // Play the question for the first turn
+        await playQuestionPrompt(baseName);
+      } finally {
+        setAudioPlaying(false);
+      }
     }
   };
-
-  const isProcessing = useKeyboardInput({
-    onKeyPress: handleAnswer,
-    isEnabled: state.isPlaying && !state.gameOver && !audioPlaying,
-    isGameStarted: state.isPlaying,
-    onEnterPress: handleStart
-  });
 
   // Set up event listeners for user interaction
   useEffect(() => {
@@ -136,8 +180,19 @@ const AlphabetGameApp = () => {
     };
   }, [cleanupAudio]);
 
+  useKeyboardInput({
+    onKeyPress: handleAnswer,
+    isEnabled: isKeyboardEnabled,
+    isGameStarted: state.isPlaying,
+  });
+
+  // Add a class to handle iOS safe areas and full-screen mode
+  const containerClass = `app-container ${backgroundColor} ${
+    isIOS ? 'ios-safe-area' : ''
+  } ${isStandalone ? 'standalone-mode' : ''}`;
+
   return (
-    <div className={`app-container ${backgroundColor}`}> {/* Dynamically set background color */}
+    <div className={containerClass}>
       <ScoreBoard score={state.score} />
 
       <div className="game-content">
@@ -150,19 +205,27 @@ const AlphabetGameApp = () => {
             onRestart={handleStart}
           />
         ) : (
-          <>
-            <div className="image-area">
+          <div className="flex flex-col items-center justify-between h-full">
+            <div className="image-area mb-8">
               <ImageCard currentImage={currentImage} feedback={state.feedback} />
             </div>
             
-            <div className="keyboard-area">
-              <Keyboard 
-                onLetterClick={handleAnswer} 
-                disabled={isProcessing || audioPlaying} 
-                correctLetter={currentImage?.letter}
-              />
+            {/* Letter Options */}
+            <div className="letter-options w-full py-4">
+              <div className="flex justify-center gap-6">
+                {options.map((letter) => (
+                  <button
+                    key={letter}
+                    onClick={() => !audioPlaying && handleAnswer(letter)}
+                    disabled={audioPlaying}
+                    className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-white text-gray-700 text-6xl md:text-8xl font-bold shadow-lg flex items-center justify-center border-4 border-gray-300 hover:bg-gray-100"
+                  >
+                    {letter}
+                  </button>
+                ))}
+              </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

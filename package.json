@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "convert-images": "node scripts/convertImages.js",
-    "generate-audio": "node scripts/generateAudio.js"
+    "generate-audio": "node scripts/generateAudio.js",
+    "generate-icons": "node scripts/generateIcons.js"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^5.8.1",
@@ -33,6 +34,8 @@
     "globals": "^15.15.0",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "vite-plugin-pwa": "^0.21.1",
+    "workbox-window": "^7.3.0"
   }
 }
