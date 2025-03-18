@@ -151,6 +151,17 @@ export const useAudio = () => {
     }
   };
 
+  const playLetter = async (letter: string) => {
+    try {
+      const audioPath = `/audio/letters/${letter}.mp3`;
+      console.log(`Playing letter sound: ${audioPath}`);
+      await playSequentialAudio(audioPath);
+    } catch (error) {
+      console.error('Error playing letter sound:', error);
+      return Promise.resolve();
+    }
+  };
+
   const cleanup = () => {
     if (audio) {
       audio.pause();
@@ -164,6 +175,7 @@ export const useAudio = () => {
     playSupportiveMessage, 
     playWordAfterPause, 
     playQuestionPrompt,
+    playLetter,
     cleanup 
   };
 };

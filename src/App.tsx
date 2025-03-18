@@ -20,15 +20,17 @@ const AlphabetGameApp = () => {
     setCurrentImage
   } = useGameState();
 
-  const { playWord, playCongratsMessage, playSupportiveMessage, playWordAfterPause, cleanup: cleanupAudio, playQuestionPrompt } = useAudio();
+  const { playWord, playCongratsMessage, playSupportiveMessage, playWordAfterPause, cleanup: cleanupAudio, playQuestionPrompt, playLetter } = useAudio();
   const [audioPlaying, setAudioPlaying] = useState(false);
   const userInteractedRef = useRef(false);
   const [backgroundColor, setBackgroundColor] = useState('bg-gray-500'); // Default to grey for new round
   const [options, setOptions] = useState<string[]>([]);
   const [isKeyboardEnabled, setIsKeyboardEnabled] = useState(false); // State to manage keyboard enable/disable
   const { isStandalone, isIOS } = useStandaloneMode();
+  const [optionsVisible, setOptionsVisible] = useState(false);
 
   const showNewImage = async () => {
+    setOptionsVisible(false); // Hide options before transition
     setBackgroundColor('bg-gray-500');
     setIsKeyboardEnabled(false);
 
@@ -66,6 +68,8 @@ const AlphabetGameApp = () => {
       } finally {
         setAudioPlaying(false);
         setIsKeyboardEnabled(true);
+        // Show options after audio finishes
+        setTimeout(() => setOptionsVisible(true), 100);
       }
     }
   };
@@ -73,6 +77,11 @@ const AlphabetGameApp = () => {
   const handleAnswer = async (key: string) => {
     if (audioPlaying) return;
     userInteractedRef.current = true;
+
+    setOptionsVisible(false); // Hide options during transition
+    setAudioPlaying(true);
+    await playLetter(key);
+    setAudioPlaying(false);
 
     if (currentImage && key === currentImage.letter) {
       setBackgroundColor('bg-green-500');
@@ -126,10 +135,13 @@ const AlphabetGameApp = () => {
       await new Promise(resolve => setTimeout(resolve, 500));
       clearFeedback();
       setBackgroundColor('bg-gray-500');
+      // Show options again after wrong answer sequence
+      setTimeout(() => setOptionsVisible(true), 100);
     }
   };
 
   const handleStart = async () => {
+    setOptionsVisible(false);
     userInteractedRef.current = true;
     
     const firstImage = startGame();
@@ -160,6 +172,8 @@ const AlphabetGameApp = () => {
         await playQuestionPrompt(baseName);
       } finally {
         setAudioPlaying(false);
+        // Show options after initial audio
+        setTimeout(() => setOptionsVisible(true), 100);
       }
     }
   };
@@ -211,13 +225,13 @@ const AlphabetGameApp = () => {
             </div>
             
             {/* Letter Options */}
-            <div className="letter-options w-full pb-safe"> {/* Add safe area padding */}
+            <div className={`letter-options w-full pb-safe transition-all duration-500 ease-in-out ${optionsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="flex justify-center gap-4 md:gap-6 p-4">
                 {options.map((letter) => (
                   <button
                     key={letter}
                     onClick={() => !audioPlaying && handleAnswer(letter)}
-                    disabled={audioPlaying}
+                    disabled={audioPlaying || !optionsVisible}
                     className="w-[25vw] h-[25vw] max-w-[140px] max-h-[140px] rounded-full bg-white text-gray-700 text-4xl md:text-6xl font-bold shadow-lg 
                              flex items-center justify-center border-4 border-gray-300/50
                              hover:bg-gray-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed

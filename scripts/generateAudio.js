@@ -224,6 +224,26 @@ async function generateAllAudio() {
       }
     }
 
+    // Generate letter sounds
+    console.log("Generating letter sounds...");
+    const lettersDir = path.join(audioDir, "letters");
+    if (!(await directoryExists(lettersDir))) {
+      await fs.mkdir(lettersDir, { recursive: true });
+    }
+
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+    for (const letter of alphabet) {
+      const outputPath = path.join(lettersDir, `${letter}.mp3`);
+      
+      if (!(await directoryExists(outputPath))) {
+        console.log(`Processing letter: ${letter}`);
+        await generateAudioFile(letter, outputPath);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } else {
+        console.log(`Skipping letter ${letter} - already exists`);
+      }
+    }
+
     console.log('Audio generation completed!');
   } catch (error) {
     console.error('Error processing files:', error);
