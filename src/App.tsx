@@ -23,8 +23,10 @@ const AlphabetGameApp = () => {
   const { playWord, playCongratsMessage, playSupportiveMessage, playWordAfterPause, cleanup: cleanupAudio } = useAudio();
   const [audioPlaying, setAudioPlaying] = useState(false);
   const userInteractedRef = useRef(false);
+  const [backgroundColor, setBackgroundColor] = useState('bg-gray-500'); // Default to grey for new round
 
   const showNewImage = async () => {
+    setBackgroundColor('bg-gray-500'); // Set background to grey for new round
     const newImage = getNextLetter();
     setCurrentImage(newImage);
     // Add a small delay before playing the word
@@ -47,7 +49,12 @@ const AlphabetGameApp = () => {
     userInteractedRef.current = true;
     
     if (currentImage && key === currentImage.letter) {
+      setBackgroundColor('bg-green-500'); // Set background to green for correct answer
       handleCorrectAnswer();
+
+      // Play correct answer sound
+      const correctSound = new Audio('/audio/other/correct.mp3');
+      correctSound.play();
       
       // Play congratulatory message and wait for it to finish
       try {
@@ -64,8 +71,13 @@ const AlphabetGameApp = () => {
       clearFeedback();
       await showNewImage();
     } else {
+      setBackgroundColor('bg-red-500'); // Set background to red for wrong answer
       const word = currentImage?.image.split('/').pop()?.split('.')[0].toLowerCase() || '';
       handleWrongAnswer(word);
+
+      // Play wrong answer sound
+      const wrongSound = new Audio('/audio/other/wrong.mp3');
+      wrongSound.play();
       
       // Play supportive message and wait for it to finish
       try {
@@ -82,6 +94,7 @@ const AlphabetGameApp = () => {
       
       await new Promise(resolve => setTimeout(resolve, 500));
       clearFeedback();
+      setBackgroundColor('bg-gray-500'); // Reset background to grey after wrong answer
     }
   };
 
@@ -124,7 +137,7 @@ const AlphabetGameApp = () => {
   }, [cleanupAudio]);
 
   return (
-    <div className="app-container bg-gradient-to-r from-yellow-100 to-orange-100">
+    <div className={`app-container ${backgroundColor}`}> {/* Dynamically set background color */}
       <ScoreBoard score={state.score} />
 
       <div className="game-content">

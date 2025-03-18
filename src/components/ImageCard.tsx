@@ -29,7 +29,7 @@ export const ImageCard = ({ currentImage, feedback }: ImageCardProps) => {
   const isCorrect = feedback.startsWith('Correct');
   
   return (
-    <div className="w-full h-full flex items-center justify-center p-8"> {/* Increased padding */}
+    <div className="w-4/5 h-full flex items-center justify-center"> {/* Changed width to 80% (w-4/5) and removed p-8 */}
       <div className="flex flex-col items-center justify-center h-full">
         <div className={`w-full max-w-full h-auto aspect-square flex flex-col items-center justify-between rounded-2xl overflow-hidden bg-white shadow-xl relative 
           ${isWrong ? 'animate-[shake_0.5s_ease-in-out]' : ''}
@@ -40,7 +40,7 @@ export const ImageCard = ({ currentImage, feedback }: ImageCardProps) => {
               ref={imgRef}
               src={currentImage.image} 
               alt={currentImage.letter} 
-              className="w-full h-full object-contain p-4"
+              className="w-full h-full object-contain p-8" /* Doubled padding from p-4 to p-8 */
               onLoad={() => setIsImageLoaded(true)}
             />
           </div>
