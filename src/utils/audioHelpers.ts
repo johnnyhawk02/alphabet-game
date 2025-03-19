@@ -65,7 +65,8 @@ export const playSoundInBackground = async (path: string, volume = 1.0): Promise
  */
 export const playCorrectAnswerSound = async (): Promise<void> => {
   try {
-    await playSoundInBackground('/audio/other/correct.mp3', 0.5);
+    // Changed to use playSound instead of playSoundInBackground to wait for completion
+    await playSound('/audio/other/correct.mp3', 0.5);
   } catch (error) {
     console.error('Failed to play correct sound:', error);
   }

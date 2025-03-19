@@ -7,9 +7,9 @@ dotenv.config();
 
 const client = new textToSpeech.TextToSpeechClient();
 
-const synthesizeSpeech = async (text) => {
+const synthesizeSpeech = async (text, useSSML = false) => {
   const request = {
-    input: { text },
+    input: useSSML ? { ssml: text } : { text },
     voice: {
       languageCode: 'en-GB',
       name: 'en-GB-Chirp3-HD-Zephyr',
@@ -21,9 +21,9 @@ const synthesizeSpeech = async (text) => {
   return response.audioContent;
 };
 
-async function generateAudioFile(text, outputPath) {
+async function generateAudioFile(text, outputPath, useSSML = false) {
   try {
-    const audioContent = await synthesizeSpeech(text);
+    const audioContent = await synthesizeSpeech(text, useSSML);
     await fs.writeFile(outputPath, audioContent, 'binary');
     console.log(`Generated audio file: ${outputPath}`);
   } catch (error) {
@@ -113,26 +113,26 @@ async function generateAllAudio() {
     }
 
     const congratulatoryMessages = [
-      "The letter matches!",
-      "That fits!",
-      "They go together.",
-      "That's a match.",
-      "Look! They connect.",
-      "The sounds match.",
-      "That works.",
-      "You found it.",
-      "That's right.",
-      "It fits nicely.",
-      "Wow, look at that!",
-      "It matches.",
-      "The sounds fit.",
-      "Good match.",
-      "Nice finding.",
-      "They belong together.",
-      "Look how they match.",
-      "You did it.",
-      "That's it.",
-      "They're the same sound."
+      "Fantastic job!",
+      "You're amazing!",
+      "Super smart!",
+      "Brilliant work!",
+      "You're a star!",
+      "That's perfect!",
+      "Way to go!",
+      "You got it!",
+      "You're so clever!",
+      "Great thinking!",
+      "Wonderful!",
+      "Super duper!",
+      "You're learning so well!",
+      "Excellent work!",
+      "You're doing great!",
+      "Keep shining!",
+      "That's beautiful!",
+      "You're incredible!",
+      "What a superstar!",
+      "You make learning fun!"
     ];
 
     for (let i = 0; i < congratulatoryMessages.length; i++) {
@@ -233,7 +233,7 @@ async function generateAllAudio() {
 
     // Mapping of letters to their phonetic letter names
     const letterNames = {
-      'a': 'A',
+      'a': 'ayee',  // Using clearer phonetic spelling to distinguish from 'eye'
       'b': 'B',
       'c': 'C',
       'd': 'D',
@@ -268,8 +268,9 @@ async function generateAllAudio() {
       if (!(await directoryExists(outputPath))) {
         // Use the letter name instead of just the letter
         const letterName = letterNames[letter];
+        const useSSML = letterName.startsWith('<speak>');
         console.log(`Processing letter: ${letter} (${letterName})`);
-        await generateAudioFile(letterName, outputPath);
+        await generateAudioFile(letterName, outputPath, useSSML);
         await new Promise(resolve => setTimeout(resolve, 1000));
       } else {
         console.log(`Skipping letter ${letter} - already exists`);

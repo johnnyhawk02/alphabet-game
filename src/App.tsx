@@ -23,7 +23,6 @@ const AlphabetGameApp = () => {
   } = useGameState();
   
   const { 
-    playWord, 
     playCongratsMessage, 
     playSupportiveMessage, 
     playWordAfterPause, 
@@ -125,11 +124,11 @@ const AlphabetGameApp = () => {
       
       setAudioPlaying(true);
       try {
-        // Play sound effect in background (doesn't wait for it to finish)
-        playCorrectAnswerSound();
-        
-        // Play TTS message simultaneously
-        await playCongratsMessage();
+        // Play both sounds simultaneously and wait for both to complete
+        await Promise.all([
+          playCorrectAnswerSound(),
+          playCongratsMessage()
+        ]);
         await delay(500);
       } catch (error) {
         console.error('Failed to play audio sequence:', error);
@@ -180,7 +179,8 @@ const AlphabetGameApp = () => {
     showNewImage, 
     handleWrongAnswer, 
     playSupportiveMessage, 
-    playWordAfterPause
+    playWordAfterPause,
+    playCorrectAnswerSound
   ]);
 
   const handleStart = useCallback(async () => {

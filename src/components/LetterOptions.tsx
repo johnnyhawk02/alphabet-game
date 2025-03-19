@@ -31,9 +31,11 @@ export const LetterOptions = memo(({
             className={`w-[25vw] h-[25vw] max-w-[140px] max-h-[140px] rounded-full bg-white text-gray-700 text-4xl md:text-6xl font-bold shadow-lg 
                      flex items-center justify-center border-4 relative
                      transition-all duration-500
-                     ${!visibleLetters.includes(letter) ? 'opacity-0' : 'animate-[fade-in_500ms_ease-in-out_forwards]'}
+                     ${!optionsVisible ? 'animate-[fade-away_300ms_ease-in-out_forwards]' : 
+                       !visibleLetters.includes(letter) ? 'opacity-0' : 
+                       'animate-[fade-in_300ms_ease-in-out_forwards]'}
                      ${highlightedLetter === letter ? 'border-yellow-400 bg-yellow-50' : 'border-gray-300/50'}
-                     ${!audioPlaying && visibleLetters.includes(letter) ? 'hover:bg-gray-50 active:scale-95 hover:border-gray-400' : ''}
+                     ${!audioPlaying && visibleLetters.includes(letter) && optionsVisible ? 'hover:bg-gray-50 active:scale-95 hover:border-gray-400' : ''}
                      disabled:cursor-not-allowed`}
           >
             {letter}
