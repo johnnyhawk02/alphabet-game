@@ -27,8 +27,8 @@ export const GameContent = ({
   onLetterClick
 }: GameContentProps) => {
   return (
-    <div className="flex flex-col items-center justify-between h-full gap-4">
-      <div className="flex-1 w-full flex items-center justify-center">
+    <div className="flex flex-col items-center justify-between min-h-full gap-4 pb-safe">
+      <div className="flex-1 w-full flex items-center justify-center pb-4">
         <ImageCard currentImage={currentImage} feedback={feedback} />
       </div>
       

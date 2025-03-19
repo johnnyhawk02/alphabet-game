@@ -21,8 +21,8 @@ export const LetterOptions = memo(({
   onLetterClick
 }: LetterOptionsProps) => {
   return (
-    <div className={`letter-options w-full pb-safe transition-opacity duration-500 relative z-10 ${optionsVisible ? 'opacity-100' : 'opacity-0'}`}>
-      <div className="flex justify-center gap-4 md:gap-6 p-4">
+    <div className="letter-options w-full relative z-10">
+      <div className="flex justify-center gap-4 md:gap-6 p-4 pb-8 mb-safe">
         {options.map((letter) => (
           <button
             key={letter}
