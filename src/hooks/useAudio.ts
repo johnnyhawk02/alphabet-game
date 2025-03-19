@@ -6,12 +6,45 @@ export const useAudio = () => {
   const lastSupportiveMessageRef = useRef<number>(-1);
 
   const preloadAudio = async (audioPath: string): Promise<HTMLAudioElement> => {
-    const newAudio = new Audio(audioPath);
-    await new Promise((resolve) => {
-      newAudio.oncanplaythrough = resolve;
-      newAudio.load();
-    });
-    return newAudio;
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        const newAudio = new Audio(audioPath);
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Audio load timeout'));
+          }, 5000); // 5 second timeout
+
+          newAudio.oncanplaythrough = () => {
+            clearTimeout(timeout);
+            resolve(newAudio);
+          };
+          
+          newAudio.onerror = (e) => {
+            clearTimeout(timeout);
+            reject(e);
+          };
+
+          // Force load for iOS
+          newAudio.load();
+          // iOS sometimes needs a touch event to start loading
+          document.addEventListener('touchstart', () => {
+            newAudio.load();
+          }, { once: true });
+        });
+        
+        return newAudio;
+      } catch (error) {
+        retries--;
+        if (retries === 0) {
+          console.error(`Failed to load audio after 3 attempts: ${audioPath}`, error);
+          throw error;
+        }
+        console.warn(`Audio load failed, retrying... (${retries} attempts left)`, error);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+      }
+    }
+    throw new Error('Audio load failed');
   };
 
   const playAudio = async (audioPath: string) => {
@@ -43,24 +76,78 @@ export const useAudio = () => {
     try {
       const newAudio = await preloadAudio(audioPath);
       
+      // Set audio to low latency mode if possible (iOS)
+      if ('webkitAudioContext' in window) {
+        newAudio.preload = 'auto';
+      }
+      
       return new Promise<void>((resolve, reject) => {
+        let hasResolved = false;
+        
+        // Set a timeout to force resolution if audio fails silently
+        const timeoutId = setTimeout(() => {
+          if (!hasResolved) {
+            console.warn('Audio playback timed out, forcing completion');
+            hasResolved = true;
+            newAudio.remove();
+            resolve();
+          }
+        }, 10000); // 10 second safety timeout
+        
         newAudio.onended = () => {
-          newAudio.remove(); // Cleanup
-          resolve();
-        };
-        newAudio.onerror = (e) => {
-          newAudio.remove(); // Cleanup
-          reject(e);
+          if (!hasResolved) {
+            hasResolved = true;
+            clearTimeout(timeoutId);
+            newAudio.remove();
+            resolve();
+          }
         };
         
-        newAudio.play().catch((err) => {
-          console.error("Error playing audio:", err);
-          newAudio.remove(); // Cleanup
-          reject(err);
-        });
+        newAudio.onerror = (e) => {
+          if (!hasResolved) {
+            hasResolved = true;
+            clearTimeout(timeoutId);
+            console.error('Audio playback error:', e);
+            newAudio.remove();
+            reject(e);
+          }
+        };
+        
+        // Add stalled/suspended event handlers
+        newAudio.onstalled = () => {
+          console.warn('Audio playback stalled, attempting to resume');
+          newAudio.load();
+          void newAudio.play();
+        };
+        
+        newAudio.onsuspend = () => {
+          console.warn('Audio playback suspended, attempting to resume');
+          void newAudio.play();
+        };
+        
+        // Attempt playback with retry logic
+        const attemptPlay = async (attemptsLeft = 3) => {
+          try {
+            await newAudio.play();
+          } catch (err) {
+            if (attemptsLeft > 0 && !hasResolved) {
+              console.warn(`Audio play failed, retrying... (${attemptsLeft} attempts left)`);
+              await new Promise(resolve => setTimeout(resolve, 500));
+              await attemptPlay(attemptsLeft - 1);
+            } else if (!hasResolved) {
+              hasResolved = true;
+              clearTimeout(timeoutId);
+              console.error("Failed to play audio after retries:", err);
+              newAudio.remove();
+              reject(err);
+            }
+          }
+        };
+        
+        void attemptPlay();
       });
     } catch (error) {
-      console.error("Error setting up audio playback:", error);
+      console.error("Error in sequential audio playback:", error);
       return Promise.resolve();
     }
   };

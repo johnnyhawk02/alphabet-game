@@ -48,6 +48,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,mp3}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -75,7 +76,11 @@ export default defineConfig({
               cacheableResponse: {
                 statuses: [0, 200]
               },
-              rangeRequests: true
+              rangeRequests: true,
+              matchOptions: {
+                ignoreSearch: true,
+                ignoreVary: true
+              }
             }
           }
         ]
@@ -84,7 +89,18 @@ export default defineConfig({
   ],
   server: {
     headers: {
-      'Accept-Ranges': 'bytes'
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'public, max-age=31536000'
+    }
+  },
+  build: {
+    assetsInlineLimit: 0, // Never inline audio files
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          audio: ['/src/hooks/useAudio.ts']
+        }
+      }
     }
   }
 })

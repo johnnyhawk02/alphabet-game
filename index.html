@@ -14,6 +14,55 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=ABeeZee:ital@0;1&display=swap" rel="stylesheet">
     <title>Alphabet Game</title>
+    <script>
+      // Preload common audio files
+      window.addEventListener('load', () => {
+        // Create a hidden audio context for iOS
+        const unlockAudio = () => {
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioContext.state === 'suspended') {
+            audioContext.resume();
+          }
+          document.removeEventListener('touchstart', unlockAudio);
+        };
+        document.addEventListener('touchstart', unlockAudio, false);
+
+        // Function to preload audio
+        const preloadAudio = (src) => {
+          const audio = new Audio();
+          audio.preload = 'auto';
+          audio.src = src;
+          return new Promise((resolve, reject) => {
+            audio.oncanplaythrough = resolve;
+            audio.onerror = reject;
+            audio.load();
+          });
+        };
+
+        // Preload essential audio files
+        const preloadList = [
+          '/audio/other/correct.mp3',
+          '/audio/other/wrong.mp3',
+          '/audio/other/the_word_is.mp3'
+        ];
+
+        // Add letter sounds to preload list
+        'abcdefghijklmnopqrstuvwxyz'.split('').forEach(letter => {
+          preloadList.push(`/audio/letters/${letter}.mp3`);
+        });
+
+        // Preload in parallel with a limit
+        const preloadBatch = async (urls, batchSize = 5) => {
+          for (let i = 0; i < urls.length; i += batchSize) {
+            const batch = urls.slice(i, i + batchSize);
+            await Promise.allSettled(batch.map(url => preloadAudio(url)));
+          }
+        };
+
+        // Start preloading
+        preloadBatch(preloadList).catch(console.error);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
