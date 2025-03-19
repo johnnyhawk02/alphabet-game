@@ -21,7 +21,7 @@ export const LetterOptions = memo(({
   onLetterClick
 }: LetterOptionsProps) => {
   return (
-    <div className={`letter-options w-full pb-safe transition-opacity duration-500 ${optionsVisible ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`letter-options w-full pb-safe transition-opacity duration-500 relative z-10 ${optionsVisible ? 'opacity-100' : 'opacity-0'}`}>
       <div className="flex justify-center gap-4 md:gap-6 p-4">
         {options.map((letter) => (
           <button
@@ -29,7 +29,7 @@ export const LetterOptions = memo(({
             onClick={() => !audioPlaying && onLetterClick(letter)}
             disabled={audioPlaying || !optionsVisible || !visibleLetters.includes(letter)}
             className={`w-[25vw] h-[25vw] max-w-[140px] max-h-[140px] rounded-full bg-white text-gray-700 text-4xl md:text-6xl font-bold shadow-lg 
-                     flex items-center justify-center border-4 
+                     flex items-center justify-center border-4 relative
                      transition-all duration-500
                      ${!visibleLetters.includes(letter) ? 'opacity-0' : 'animate-[fade-in_500ms_ease-in-out_forwards]'}
                      ${highlightedLetter === letter ? 'border-yellow-400 bg-yellow-50' : 'border-gray-300/50'}

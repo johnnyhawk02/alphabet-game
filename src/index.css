@@ -17,7 +17,7 @@ body {
   min-height: 100svh;
   width: 100%;
   overflow-x: hidden;
-  background-color: pink; /* Changed background to pink */
+  background-color: #f8fafc; /* Light gray background */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
@@ -33,6 +33,7 @@ body {
   overflow: hidden;
   position: fixed;
   inset: 0;
+  background-color: #f8fafc; /* Match body background */
 }
 
 /* Game content takes up all available space */

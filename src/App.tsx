@@ -237,14 +237,14 @@ const AlphabetGameApp = () => {
   });
 
   // Add a class to handle iOS safe areas and full-screen mode
-  const containerClass = `app-container ${backgroundColor} ${
+  const containerClass = `app-container ${backgroundColor} relative z-0 ${
     isIOS ? 'ios-safe-area' : ''
   } ${isStandalone ? 'standalone-mode' : ''}`;
 
   return (
     <div className={containerClass}>
       <ScoreBoard score={state.score} />
-      <div className="game-content min-h-[100svh]">
+      <div className="game-content min-h-[100svh] relative z-1">
         {!state.isPlaying && !state.gameOver ? (
           <WelcomeScreen onStart={handleStart} />
         ) : state.gameOver ? (
