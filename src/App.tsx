@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
-import { ImageCard } from './components/ImageCard';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { ScoreBoard } from './components/ScoreBoard';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { GameOverScreen } from './components/GameOverScreen';
+import { GameContent } from './components/GameContent';
 import { useGameState } from './hooks/useGameState';
 import { useAudio } from './hooks/useAudio';
-import { useKeyboardInput } from './hooks/useKeyboardInput'; // Import the useKeyboardInput hook
+import { useKeyboardInput } from './hooks/useKeyboardInput';
 import { useStandaloneMode } from './hooks/useStandaloneMode';
+import { generateLetterOptions, getWordFromImagePath } from './utils/letterOptions';
+import { playCorrectAnswerSound, playWrongAnswerSound, delay } from './utils/audioHelpers';
 
 const AlphabetGameApp = () => {
   const {
@@ -19,20 +21,31 @@ const AlphabetGameApp = () => {
     clearFeedback,
     setCurrentImage
   } = useGameState();
-
-  const { playWord, playCongratsMessage, playSupportiveMessage, playWordAfterPause, cleanup: cleanupAudio, playQuestionPrompt, playLetter } = useAudio();
+  
+  const { 
+    playWord, 
+    playCongratsMessage, 
+    playSupportiveMessage, 
+    playWordAfterPause, 
+    cleanup: cleanupAudio, 
+    playQuestionPrompt, 
+    playLetter 
+  } = useAudio();
+  
+  // UI state
   const [audioPlaying, setAudioPlaying] = useState(false);
-  const userInteractedRef = useRef(false);
-  const [backgroundColor, setBackgroundColor] = useState('bg-gray-500'); // Default to grey for new round
+  const [backgroundColor, setBackgroundColor] = useState('bg-gray-500');
   const [options, setOptions] = useState<string[]>([]);
-  const [isKeyboardEnabled, setIsKeyboardEnabled] = useState(false); // State to manage keyboard enable/disable
-  const { isStandalone, isIOS } = useStandaloneMode();
+  const [isKeyboardEnabled, setIsKeyboardEnabled] = useState(false);
   const [optionsVisible, setOptionsVisible] = useState(false);
   const [visibleLetters, setVisibleLetters] = useState<string[]>([]);
   const [highlightedLetter, setHighlightedLetter] = useState<string | null>(null);
+  
+  const userInteractedRef = useRef(false);
+  const { isStandalone, isIOS } = useStandaloneMode();
 
   // Function to reveal letters one at a time with audio
-  const revealLettersWithAudio = async (letters: string[]) => {
+  const revealLettersWithAudio = useCallback(async (letters: string[]) => {
     setVisibleLetters([]);
     setOptionsVisible(true);
     setAudioPlaying(true);
@@ -46,7 +59,7 @@ const AlphabetGameApp = () => {
       try {
         await playLetter(letters[i]);
         // Add a small pause between letters
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await delay(300);
       } catch (error) {
         console.error("Error playing letter sound:", error);
       } finally {
@@ -57,40 +70,26 @@ const AlphabetGameApp = () => {
     
     setAudioPlaying(false);
     setIsKeyboardEnabled(true);
-  };
+  }, [playLetter]);
 
-  const showNewImage = async () => {
-    setOptionsVisible(false); // Hide options before transition
+  const showNewImage = useCallback(async () => {
+    setOptionsVisible(false);
     setVisibleLetters([]);
     setHighlightedLetter(null);
     setBackgroundColor('bg-gray-500');
     setIsKeyboardEnabled(false);
-
+    
     const newImage = getNextLetter();
     setCurrentImage(newImage);
-
-    // Generate random options including the correct letter
-    const letters = 'abcdefghijklmnopqrstuvwxyz';
-    const correctLetter = newImage.letter;
-    const tempLetters = [correctLetter];
-    const randomLetters: string[] = [];
-
-    while (randomLetters.length < 2) {
-      const randLetter = letters[Math.floor(Math.random() * letters.length)];
-      if (!tempLetters.includes(randLetter)) {
-        randomLetters.push(randLetter);
-        tempLetters.push(randLetter);
-      }
-    }
-
-    const allOptions = [correctLetter, ...randomLetters];
-    const shuffledOptions = allOptions.sort(() => Math.random() - 0.5);
-    setOptions(shuffledOptions);
-
-    // Add a longer pause before starting audio sequence
-    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const baseName = newImage.image.split('/').pop()?.split('.')[0].toLowerCase();
+    // Generate random options including the correct letter
+    const shuffledOptions = generateLetterOptions(newImage.letter);
+    setOptions(shuffledOptions);
+    
+    // Add a longer pause before starting audio sequence
+    await delay(1000);
+    
+    const baseName = getWordFromImagePath(newImage.image);
     if (baseName) {
       setAudioPlaying(true);
       try {
@@ -107,58 +106,55 @@ const AlphabetGameApp = () => {
         setVisibleLetters(shuffledOptions); // Show all letters if there's an error
       }
     }
-  };
+  }, [getNextLetter, setCurrentImage, playQuestionPrompt, revealLettersWithAudio]);
 
-  const handleAnswer = async (key: string) => {
+  const handleAnswer = useCallback(async (key: string) => {
     if (audioPlaying) return;
+    
     userInteractedRef.current = true;
-
     setOptionsVisible(false); // Hide options during transition
     setAudioPlaying(true);
+    
     await playLetter(key);
     setAudioPlaying(false);
-
+    
     if (currentImage && key === currentImage.letter) {
+      // Correct answer flow
       setBackgroundColor('bg-green-500');
       handleCorrectAnswer();
+      
       setAudioPlaying(true);
-
       try {
-        // Pre-load and play correct sound
-        const correctSound = new Audio('/audio/other/correct.mp3');
-        await new Promise((resolve) => {
-          correctSound.oncanplaythrough = resolve;
-          correctSound.load();
-        });
-        correctSound.volume = 0.5;
-        await correctSound.play();
-
-        // Play congratulatory message
+        // Play sound effect in background (doesn't wait for it to finish)
+        playCorrectAnswerSound();
+        
+        // Play TTS message simultaneously
         await playCongratsMessage();
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await delay(500);
       } catch (error) {
         console.error('Failed to play audio sequence:', error);
       } finally {
         setAudioPlaying(false);
       }
-
+      
       clearFeedback();
       await showNewImage();
     } else {
+      // Wrong answer flow
       setBackgroundColor('bg-red-500');
-      const word = currentImage?.image.split('/').pop()?.split('.')[0].toLowerCase() || '';
+      const word = currentImage ? getWordFromImagePath(currentImage.image) : '';
+      
       handleWrongAnswer(word);
-
+      
       try {
-        // Pre-load and play wrong sound
-        const wrongSound = new Audio('/audio/other/wrong.mp3');
-        await new Promise((resolve) => {
-          wrongSound.oncanplaythrough = resolve;
-          wrongSound.load();
-        });
-        await wrongSound.play();
-
+        // Play sound effect in background (doesn't wait for it to finish)
+        playWrongAnswerSound();
+        
+        // A short pause before starting TTS
+        await delay(200);
+        
         setAudioPlaying(true);
+        // Play TTS messages
         await playSupportiveMessage();
         await playWordAfterPause(word);
       } catch (error) {
@@ -166,16 +162,28 @@ const AlphabetGameApp = () => {
       } finally {
         setAudioPlaying(false);
       }
-
-      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      await delay(500);
       clearFeedback();
       setBackgroundColor('bg-gray-500');
+      
       // Show options again after wrong answer sequence
       setTimeout(() => setOptionsVisible(true), 100);
     }
-  };
+  }, [
+    audioPlaying, 
+    currentImage, 
+    playLetter, 
+    handleCorrectAnswer, 
+    playCongratsMessage, 
+    clearFeedback, 
+    showNewImage, 
+    handleWrongAnswer, 
+    playSupportiveMessage, 
+    playWordAfterPause
+  ]);
 
-  const handleStart = async () => {
+  const handleStart = useCallback(async () => {
     setOptionsVisible(false);
     setVisibleLetters([]);
     setHighlightedLetter(null);
@@ -184,25 +192,10 @@ const AlphabetGameApp = () => {
     const firstImage = startGame();
     
     // Generate random options including the correct letter
-    const letters = 'abcdefghijklmnopqrstuvwxyz';
-    const correctLetter = firstImage.letter;
-    
-    const tempLetters = [correctLetter];
-    const randomLetters: string[] = [];
-    
-    while (randomLetters.length < 2) {
-      const randLetter = letters[Math.floor(Math.random() * letters.length)];
-      if (!tempLetters.includes(randLetter)) {
-        randomLetters.push(randLetter);
-        tempLetters.push(randLetter);
-      }
-    }
-    
-    const allOptions = [correctLetter, ...randomLetters];
-    const shuffledOptions = allOptions.sort(() => Math.random() - 0.5);
+    const shuffledOptions = generateLetterOptions(firstImage.letter);
     setOptions(shuffledOptions);
     
-    const baseName = firstImage.image.split('/').pop()?.split('.')[0].toLowerCase();
+    const baseName = getWordFromImagePath(firstImage.image);
     if (baseName) {
       setAudioPlaying(true);
       try {
@@ -219,7 +212,7 @@ const AlphabetGameApp = () => {
         setVisibleLetters(shuffledOptions); // Show all letters if there's an error
       }
     }
-  };
+  }, [startGame, playQuestionPrompt, revealLettersWithAudio]);
 
   // Set up event listeners for user interaction
   useEffect(() => {
@@ -251,8 +244,7 @@ const AlphabetGameApp = () => {
   return (
     <div className={containerClass}>
       <ScoreBoard score={state.score} />
-
-      <div className="game-content min-h-[100svh]"> {/* Use svh for better iOS support */}
+      <div className="game-content min-h-[100svh]">
         {!state.isPlaying && !state.gameOver ? (
           <WelcomeScreen onStart={handleStart} />
         ) : state.gameOver ? (
@@ -262,33 +254,16 @@ const AlphabetGameApp = () => {
             onRestart={handleStart}
           />
         ) : (
-          <div className="flex flex-col items-center justify-between h-full gap-4">
-            <div className="flex-1 w-full flex items-center justify-center">
-              <ImageCard currentImage={currentImage} feedback={state.feedback} />
-            </div>
-            
-            {/* Letter Options */}
-            <div className={`letter-options w-full pb-safe transition-all duration-500 ease-in-out ${optionsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <div className="flex justify-center gap-4 md:gap-6 p-4">
-                {options.map((letter) => (
-                  <button
-                    key={letter}
-                    onClick={() => !audioPlaying && handleAnswer(letter)}
-                    disabled={audioPlaying || !optionsVisible || !visibleLetters.includes(letter)}
-                    className={`w-[25vw] h-[25vw] max-w-[140px] max-h-[140px] rounded-full bg-white text-gray-700 text-4xl md:text-6xl font-bold shadow-lg 
-                             flex items-center justify-center border-4 border-gray-300/50
-                             hover:bg-gray-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed
-                             transition-all duration-150 transform hover:scale-105
-                             hover:border-gray-400 hover:shadow-xl
-                             ${!visibleLetters.includes(letter) ? 'opacity-0' : 'opacity-100'}
-                             ${highlightedLetter === letter ? 'animate-[highlight-letter_1.5s_ease-in-out] border-yellow-400 bg-yellow-50' : ''}`}
-                  >
-                    {letter}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          <GameContent 
+            currentImage={currentImage}
+            feedback={state.feedback}
+            options={options}
+            visibleLetters={visibleLetters}
+            highlightedLetter={highlightedLetter}
+            audioPlaying={audioPlaying}
+            optionsVisible={optionsVisible}
+            onLetterClick={handleAnswer}
+          />
         )}
       </div>
     </div>

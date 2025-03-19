@@ -1,54 +1,85 @@
-# React + TypeScript + Vite
+# Alphabet Game
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An interactive educational web application designed to help children learn the alphabet through an engaging game format. The app shows images and prompts users to select the correct starting letter, with audio feedback and supportive messages.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Interactive Learning Experience**: Images with corresponding letter choices
+- **Audio Feedback**: Voice prompts and positive reinforcement
+- **Progressive Web App**: Installable on mobile devices with offline support
+- **Mobile-Optimized**: Responsive design with special handling for iOS and fullscreen mode
+- **Score Tracking**: Points system to motivate progress
+- **Supportive Learning**: Hints and encouragement for incorrect answers
 
-## Expanding the ESLint configuration
+## Technologies
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
+- PWA (Progressive Web App)
+- Google Text-to-Speech API
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Development Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Available Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `npm run dev`: Start development server
+- `npm run build`: Build for production
+- `npm run lint`: Run ESLint
+- `npm run preview`: Preview production build
+- `npm run convert-images`: Run the image conversion script
+- `npm run generate-audio`: Generate audio files using Google Text-to-Speech
+- `npm run generate-icons`: Generate app icons in various sizes
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+## Project Structure
+
 ```
+alphabet-game/
+├── public/               # Static assets
+│   ├── audio/            # Audio files for letters, words, and feedback
+│   ├── icons/            # App icons for PWA
+│   ├── images/           # Image collection for the game
+│   └── manifest.webmanifest  # PWA manifest file
+├── src/
+│   ├── components/       # React components
+│   ├── hooks/            # Custom React hooks
+│   ├── types/            # TypeScript type definitions
+│   ├── App.tsx           # Main application component
+│   └── main.tsx          # Application entry point
+└── scripts/              # Utility scripts
+    ├── convertImages.js  # Script to process and optimize images
+    ├── generateAudio.js  # Script to generate audio using Google TTS
+    └── generateIcons.js  # Script to generate app icons
+```
+
+## How to Play
+
+1. Start the game by clicking the start button
+2. An image will be displayed with a question prompt
+3. Select the correct letter that the image starts with
+4. Receive points for correct answers
+5. Get supportive feedback for incorrect answers
+6. Continue playing to improve your score
+
+## License
+
+[Add your license information here]
+
+## Author
+
+[Your Name]
